@@ -171,6 +171,7 @@ TSharedPtr<IAnalyticsProvider> FAnalyticsGoogleAnalytics::CreateAnalyticsProvide
 FAnalyticsProviderGoogleAnalytics::FAnalyticsProviderGoogleAnalytics(const FString TrackingId, const int32 SendInterval) :
 	ApiTrackingId(TrackingId),
 	bHasSessionStarted(false),
+	bSessionStartedSent(false),
 	Interval(SendInterval)
 {
 }
@@ -201,7 +202,19 @@ bool FAnalyticsProviderGoogleAnalytics::StartSession(const TArray<FAnalyticsEven
 #elif PLATFORM_ANDROID
 		AndroidThunkCpp_GoogleAnalyticsStartSession(ApiTrackingId, Interval);
 #else
-		UniversalCid = FMD5::HashAnsiString(*("UniversalCid" + FDateTime::Now().ToString()));;
+		FString UniversalCidBufor("");
+		GConfig->GetString(TEXT("GoogleAnalytics"), TEXT("UniversalCid"), UniversalCidBufor, GEngineIni);
+
+		if (UniversalCidBufor.Len() > 0)
+		{
+			UniversalCid = UniversalCidBufor;
+		}
+		else
+		{
+			UniversalCid = FMD5::HashAnsiString(*("UniversalCid" + FDateTime::Now().ToString()));
+		}
+
+		GConfig->SetString(TEXT("GoogleAnalytics"), TEXT("UniversalCid"), *UniversalCid, GEngineIni);
 #endif
 		if (Attributes.Num() > 0)
 		{
@@ -221,6 +234,7 @@ void FAnalyticsProviderGoogleAnalytics::EndSession()
 		[[GAI sharedInstance] removeTrackerByName:@"DefaultTracker"];
 #endif
 		bHasSessionStarted = false;
+		bSessionStartedSent = false;
 	}
 }
 
@@ -235,6 +249,20 @@ void FAnalyticsProviderGoogleAnalytics::SetTrackingId(const FString& TrackingId)
 FString FAnalyticsProviderGoogleAnalytics::GetTrackingId()
 {
 	return ApiTrackingId;
+}
+
+FString FAnalyticsProviderGoogleAnalytics::GetSystemInfo()
+{
+	const FVector2D ViewportSize = FVector2D(GEngine->GameViewport->Viewport->GetSizeXY());
+	FString SystemInfo = FString("&ul=" + FInternationalization::Get().GetCurrentCulture()->GetName() + "&ua=Windows&sr=" + FString::FromInt(ViewportSize.X) + "x" + FString::FromInt(ViewportSize.Y) + "&vp=" + FString::FromInt(ViewportSize.X) + "x" + FString::FromInt(ViewportSize.Y));
+
+	if (!bSessionStartedSent)
+	{
+		bSessionStartedSent = true;
+		SystemInfo += "&sc=start";
+	}
+
+	return SystemInfo;
 }
 
 void FAnalyticsProviderGoogleAnalytics::FlushEvents()
@@ -389,7 +417,7 @@ void FAnalyticsProviderGoogleAnalytics::RecordEvent(const FString& EventName, co
 			AndroidThunkCpp_GoogleAnalyticsRecordEvent(Category, EventName, Label, Value);
 #else 
 			TSharedRef<IHttpRequest> HttpRequest = FHttpModule::Get().CreateRequest();
-			HttpRequest->SetURL("https://www.google-analytics.com/collect?v=1&t=event&tid=" + ApiTrackingId + "&cid=" + UniversalCid + "&ec=" + Category + "&ea=" + EventName + "&el=" + Label + "&ev=" + FString::FromInt(Value) + "&geoid=" + Location + "&uid=" + UserId);
+			HttpRequest->SetURL("https://www.google-analytics.com/collect?v=1&t=event&tid=" + ApiTrackingId + "&cid=" + UniversalCid + "&ec=" + Category + "&ea=" + EventName + "&el=" + Label + "&ev=" + FString::FromInt(Value) + "&geoid=" + Location + "&uid=" + UserId + GetSystemInfo());
 			HttpRequest->SetVerb("GET");
 			HttpRequest->ProcessRequest();
 #endif
@@ -415,7 +443,7 @@ void FAnalyticsProviderGoogleAnalytics::RecordScreen(const FString& ScreenName)
 			AndroidThunkCpp_GoogleAnalyticsRecordScreen(ScreenName);
 #else
 			TSharedRef<IHttpRequest> HttpRequest = FHttpModule::Get().CreateRequest();
-			HttpRequest->SetURL("https://www.google-analytics.com/collect?v=1&t=pageview&tid=" + ApiTrackingId + "&cid=" + UniversalCid + "&dp=" + ScreenName + "&geoid=" + Location + "&uid=" + UserId);
+			HttpRequest->SetURL("https://www.google-analytics.com/collect?v=1&t=pageview&tid=" + ApiTrackingId + "&cid=" + UniversalCid + "&dp=" + ScreenName + "&geoid=" + Location + "&uid=" + UserId + GetSystemInfo());
 			HttpRequest->SetVerb("GET");
 			HttpRequest->ProcessRequest();
 #endif
@@ -502,12 +530,12 @@ void FAnalyticsProviderGoogleAnalytics::RecordCurrencyPurchase(const FString& Ga
 			AndroidThunkCpp_GoogleAnalyticsRecordCurrencyPurchase(TransactionId, GameCurrencyType, GameCurrencyAmount, RealCurrencyType, RealMoneyCost, PaymentProvider);
 #else
 			TSharedRef<IHttpRequest> HttpRequestTransaction = FHttpModule::Get().CreateRequest();
-			HttpRequestTransaction->SetURL("https://www.google-analytics.com/collect?v=1&t=transaction&tid=" + ApiTrackingId + "&cid=" + UniversalCid + "&geoid=" + Location + "&uid=" + UserId + "&ti=" + TransactionId + "&ta=" + PaymentProvider + "&tr=" + FString::SanitizeFloat(RealMoneyCost) + "&ts=0&tt=0&cu=" + RealCurrencyType);
+			HttpRequestTransaction->SetURL("https://www.google-analytics.com/collect?v=1&t=transaction&tid=" + ApiTrackingId + "&cid=" + UniversalCid + "&geoid=" + Location + "&uid=" + UserId + "&ti=" + TransactionId + "&ta=" + PaymentProvider + "&tr=" + FString::SanitizeFloat(RealMoneyCost) + "&ts=0&tt=0&cu=" + RealCurrencyType + GetSystemInfo());
 			HttpRequestTransaction->SetVerb("GET");
 			HttpRequestTransaction->ProcessRequest();
 
 			TSharedRef<IHttpRequest> HttpRequestItem = FHttpModule::Get().CreateRequest();
-			HttpRequestItem->SetURL("https://www.google-analytics.com/collect?v=1&t=item&tid=" + ApiTrackingId + "&cid=" + UniversalCid + "&geoid=" + Location + "&uid=" + UserId + "&ti=" + TransactionId + "&in=" + GameCurrencyType + "&ip=" + FString::SanitizeFloat(RealMoneyCost / GameCurrencyAmount) + "&iq=" + FString::FromInt(GameCurrencyAmount) + "&iv=" + PaymentProvider + "&ic=" + GameCurrencyType + "&cu=" + RealCurrencyType);
+			HttpRequestItem->SetURL("https://www.google-analytics.com/collect?v=1&t=item&tid=" + ApiTrackingId + "&cid=" + UniversalCid + "&geoid=" + Location + "&uid=" + UserId + "&ti=" + TransactionId + "&in=" + GameCurrencyType + "&ip=" + FString::SanitizeFloat(RealMoneyCost / GameCurrencyAmount) + "&iq=" + FString::FromInt(GameCurrencyAmount) + "&iv=" + PaymentProvider + "&ic=" + GameCurrencyType + "&cu=" + RealCurrencyType + GetSystemInfo());
 			HttpRequestItem->SetVerb("GET");
 			HttpRequestItem->ProcessRequest();
 #endif
@@ -545,7 +573,7 @@ void FAnalyticsProviderGoogleAnalytics::RecordError(const FString& Error, const 
 			AndroidThunkCpp_GoogleAnalyticsRecordError(Error);
 #else
 			TSharedRef<IHttpRequest> HttpRequest = FHttpModule::Get().CreateRequest();
-			HttpRequest->SetURL("https://www.google-analytics.com/collect?v=1&t=exception&tid=" + ApiTrackingId + "&cid=" + UniversalCid + "&geoid=" + Location + "&uid=" + UserId + "&exd=" + Error + "&exf=0");
+			HttpRequest->SetURL("https://www.google-analytics.com/collect?v=1&t=exception&tid=" + ApiTrackingId + "&cid=" + UniversalCid + "&geoid=" + Location + "&uid=" + UserId + "&exd=" + Error + "&exf=0" + GetSystemInfo());
 			HttpRequest->SetVerb("GET");
 			HttpRequest->ProcessRequest();
 #endif
