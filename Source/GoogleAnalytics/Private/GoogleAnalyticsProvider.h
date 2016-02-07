@@ -14,6 +14,7 @@ class FAnalyticsProviderGoogleAnalytics :
 {
 	FString ApiTrackingId;
 	bool bHasSessionStarted;
+	bool bSessionStartedSent;
 	FString UserId;
 	FString UniversalCid;
 	FString Location;
@@ -67,4 +68,6 @@ public:
 
 	void SetTrackingId(const FString& TrackingId);
 	FString GetTrackingId();
+
+	FString GetSystemInfo();
 };
