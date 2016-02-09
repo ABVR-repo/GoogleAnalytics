@@ -376,6 +376,19 @@ bool FAnalyticsProviderGoogleAnalytics::SetSessionID(const FString& InSessionID)
 	return true;
 }
 
+FString EncodeStringsForHTML(FString ToBeEncoded)
+{
+	// Note, it's clearly very simple to add replacements for any other illegal characters, I just thought these were common
+	ToBeEncoded = ToBeEncoded.Replace(TEXT(" "), TEXT("%20"), ESearchCase::IgnoreCase);
+	ToBeEncoded = ToBeEncoded.Replace(TEXT("&"), TEXT("%26"), ESearchCase::IgnoreCase);
+	ToBeEncoded = ToBeEncoded.Replace(TEXT("#"), TEXT("%23"), ESearchCase::IgnoreCase);
+	ToBeEncoded = ToBeEncoded.Replace(TEXT("\""), TEXT("%22"), ESearchCase::IgnoreCase);
+	ToBeEncoded = ToBeEncoded.Replace(TEXT("?"), TEXT("%3F"), ESearchCase::IgnoreCase);
+	ToBeEncoded = ToBeEncoded.Replace(TEXT("@"), TEXT("%40"), ESearchCase::IgnoreCase);
+
+	return ToBeEncoded;
+}
+
 void FAnalyticsProviderGoogleAnalytics::RecordEvent(const FString& EventName, const TArray<FAnalyticsEventAttribute>& Attributes)
 {
 	if (bHasSessionStarted)
@@ -391,10 +404,12 @@ void FAnalyticsProviderGoogleAnalytics::RecordEvent(const FString& EventName, co
 				if (Attributes[i].AttrName.Equals("Category") && Attributes[i].AttrValue.Len() > 0)
 				{
 					Category = Attributes[i].AttrValue;
+					Category = EncodeStringsForHTML(Category);
 				}
 				else if (Attributes[i].AttrName.Equals("Label") && Attributes[i].AttrValue.Len() > 0)
 				{
 					Label = Attributes[i].AttrValue;
+					Label = EncodeStringsForHTML(Label);
 				}
 				else if (Attributes[i].AttrName.Equals("Value"))
 				{
