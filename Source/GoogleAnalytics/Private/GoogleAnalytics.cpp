@@ -253,16 +253,21 @@ FString FAnalyticsProviderGoogleAnalytics::GetTrackingId()
 
 FString FAnalyticsProviderGoogleAnalytics::GetSystemInfo()
 {
-	const FVector2D ViewportSize = FVector2D(GEngine->GameViewport->Viewport->GetSizeXY());
-	FString SystemInfo = FString("&ul=" + FInternationalization::Get().GetCurrentCulture()->GetName() + "&ua=Windows&sr=" + FString::FromInt(ViewportSize.X) + "x" + FString::FromInt(ViewportSize.Y) + "&vp=" + FString::FromInt(ViewportSize.X) + "x" + FString::FromInt(ViewportSize.Y));
-
-	if (!bSessionStartedSent)
+	if (GEngine->GameViewport)
 	{
-		bSessionStartedSent = true;
-		SystemInfo += "&sc=start";
-	}
+		const FVector2D ViewportSize = FVector2D(GEngine->GameViewport->Viewport->GetSizeXY());
+		FString SystemInfo = FString("&ul=" + FInternationalization::Get().GetCurrentCulture()->GetName() + "&ua=Windows&sr=" + FString::FromInt(ViewportSize.X) + "x" + FString::FromInt(ViewportSize.Y) + "&vp=" + FString::FromInt(ViewportSize.X) + "x" + FString::FromInt(ViewportSize.Y));
 
-	return SystemInfo;
+		if (!bSessionStartedSent)
+		{
+			bSessionStartedSent = true;
+			SystemInfo += "&sc=start";
+		}
+		return SystemInfo;
+	}
+	else {
+		return "";
+	}
 }
 
 void FAnalyticsProviderGoogleAnalytics::FlushEvents()
@@ -385,6 +390,8 @@ FString EncodeStringsForHTML(FString ToBeEncoded)
 	ToBeEncoded = ToBeEncoded.Replace(TEXT("\""), TEXT("%22"), ESearchCase::IgnoreCase);
 	ToBeEncoded = ToBeEncoded.Replace(TEXT("?"), TEXT("%3F"), ESearchCase::IgnoreCase);
 	ToBeEncoded = ToBeEncoded.Replace(TEXT("@"), TEXT("%40"), ESearchCase::IgnoreCase);
+	ToBeEncoded = ToBeEncoded.Replace(TEXT(":"), TEXT("%3A"), ESearchCase::IgnoreCase);
+	ToBeEncoded = ToBeEncoded.Replace(TEXT("_"), TEXT("%5F"), ESearchCase::IgnoreCase);
 
 	return ToBeEncoded;
 }
@@ -395,6 +402,7 @@ void FAnalyticsProviderGoogleAnalytics::RecordEvent(const FString& EventName, co
 	{
 		if (EventName.Len() > 0)
 		{
+			FString Action = EncodeStringsForHTML(EventName);
 			FString Category = FString("Default Category");
 			FString Label = FString("");
 			float Value = 0;
@@ -432,7 +440,7 @@ void FAnalyticsProviderGoogleAnalytics::RecordEvent(const FString& EventName, co
 			AndroidThunkCpp_GoogleAnalyticsRecordEvent(Category, EventName, Label, Value);
 #else 
 			TSharedRef<IHttpRequest> HttpRequest = FHttpModule::Get().CreateRequest();
-			HttpRequest->SetURL("https://www.google-analytics.com/collect?v=1&t=event&tid=" + ApiTrackingId + "&cid=" + UniversalCid + "&ec=" + Category + "&ea=" + EventName + "&el=" + Label + "&ev=" + FString::FromInt(Value) + "&geoid=" + Location + "&uid=" + UserId + GetSystemInfo());
+			HttpRequest->SetURL("https://www.google-analytics.com/collect?v=1&t=event&tid=" + ApiTrackingId + "&cid=" + UniversalCid + "&ec=" + Category + "&ea=" + Action + "&el=" + Label + "&ev=" + FString::FromInt(Value) + "&geoid=" + Location + "&uid=" + UserId + GetSystemInfo());
 			HttpRequest->SetVerb("GET");
 			HttpRequest->ProcessRequest();
 #endif
