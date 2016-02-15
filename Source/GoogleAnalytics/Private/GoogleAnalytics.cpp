@@ -253,22 +253,21 @@ FString FAnalyticsProviderGoogleAnalytics::GetTrackingId()
 
 FString FAnalyticsProviderGoogleAnalytics::GetSystemInfo()
 {
+	FString SystemInfo = FString("");
+
 	if (GEngine->GameViewport)
 	{
 		const FVector2D ViewportSize = FVector2D(GEngine->GameViewport->Viewport->GetSizeXY());
-		FString SystemInfo = FString("&ul=" + FInternationalization::Get().GetCurrentCulture()->GetName() + "&ua=Windows&sr=" + FString::FromInt(ViewportSize.X) + "x" + FString::FromInt(ViewportSize.Y) + "&vp=" + FString::FromInt(ViewportSize.X) + "x" + FString::FromInt(ViewportSize.Y));
+		SystemInfo += FString("&ul=" + FInternationalization::Get().GetCurrentCulture()->GetName() + "&ua=Windows&sr=" + FString::FromInt(ViewportSize.X) + "x" + FString::FromInt(ViewportSize.Y) + "&vp=" + FString::FromInt(ViewportSize.X) + "x" + FString::FromInt(ViewportSize.Y));
+	}
 
-		if (!bSessionStartedSent)
-		{
-			bSessionStartedSent = true;
-			SystemInfo += "&sc=start";
-		}
-		return SystemInfo;
-	}
-	else 
+	if (!bSessionStartedSent)
 	{
-		return "";
+		bSessionStartedSent = true;
+		SystemInfo += "&sc=start";
 	}
+
+	return SystemInfo;
 }
 
 void FAnalyticsProviderGoogleAnalytics::FlushEvents()
