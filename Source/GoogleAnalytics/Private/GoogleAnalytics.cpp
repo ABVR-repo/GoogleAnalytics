@@ -265,7 +265,8 @@ FString FAnalyticsProviderGoogleAnalytics::GetSystemInfo()
 		}
 		return SystemInfo;
 	}
-	else {
+	else 
+	{
 		return "";
 	}
 }
@@ -383,7 +384,6 @@ bool FAnalyticsProviderGoogleAnalytics::SetSessionID(const FString& InSessionID)
 
 FString EncodeStringsForHTML(FString ToBeEncoded)
 {
-	// Note, it's clearly very simple to add replacements for any other illegal characters, I just thought these were common
 	ToBeEncoded = ToBeEncoded.Replace(TEXT(" "), TEXT("%20"), ESearchCase::IgnoreCase);
 	ToBeEncoded = ToBeEncoded.Replace(TEXT("&"), TEXT("%26"), ESearchCase::IgnoreCase);
 	ToBeEncoded = ToBeEncoded.Replace(TEXT("#"), TEXT("%23"), ESearchCase::IgnoreCase);
@@ -402,7 +402,7 @@ void FAnalyticsProviderGoogleAnalytics::RecordEvent(const FString& EventName, co
 	{
 		if (EventName.Len() > 0)
 		{
-			FString Action = EncodeStringsForHTML(EventName);
+			FString Action = FString(EventName);
 			FString Category = FString("Default Category");
 			FString Label = FString("");
 			float Value = 0;
@@ -412,12 +412,10 @@ void FAnalyticsProviderGoogleAnalytics::RecordEvent(const FString& EventName, co
 				if (Attributes[i].AttrName.Equals("Category") && Attributes[i].AttrValue.Len() > 0)
 				{
 					Category = Attributes[i].AttrValue;
-					Category = EncodeStringsForHTML(Category);
 				}
 				else if (Attributes[i].AttrName.Equals("Label") && Attributes[i].AttrValue.Len() > 0)
 				{
 					Label = Attributes[i].AttrValue;
-					Label = EncodeStringsForHTML(Label);
 				}
 				else if (Attributes[i].AttrName.Equals("Value"))
 				{
@@ -440,7 +438,7 @@ void FAnalyticsProviderGoogleAnalytics::RecordEvent(const FString& EventName, co
 			AndroidThunkCpp_GoogleAnalyticsRecordEvent(Category, EventName, Label, Value);
 #else 
 			TSharedRef<IHttpRequest> HttpRequest = FHttpModule::Get().CreateRequest();
-			HttpRequest->SetURL("https://www.google-analytics.com/collect?v=1&t=event&tid=" + ApiTrackingId + "&cid=" + UniversalCid + "&ec=" + Category + "&ea=" + Action + "&el=" + Label + "&ev=" + FString::FromInt(Value) + "&geoid=" + Location + "&uid=" + UserId + GetSystemInfo());
+			HttpRequest->SetURL("https://www.google-analytics.com/collect?v=1&t=event&tid=" + ApiTrackingId + "&cid=" + UniversalCid + "&ec=" + EncodeStringsForHTML(Category) + "&ea=" + EncodeStringsForHTML(Action) + "&el=" + EncodeStringsForHTML(Label) + "&ev=" + FString::FromInt(Value) + "&geoid=" + Location + "&uid=" + UserId + GetSystemInfo());
 			HttpRequest->SetVerb("GET");
 			HttpRequest->ProcessRequest();
 #endif
@@ -466,7 +464,7 @@ void FAnalyticsProviderGoogleAnalytics::RecordScreen(const FString& ScreenName)
 			AndroidThunkCpp_GoogleAnalyticsRecordScreen(ScreenName);
 #else
 			TSharedRef<IHttpRequest> HttpRequest = FHttpModule::Get().CreateRequest();
-			HttpRequest->SetURL("https://www.google-analytics.com/collect?v=1&t=pageview&tid=" + ApiTrackingId + "&cid=" + UniversalCid + "&dp=" + ScreenName + "&geoid=" + Location + "&uid=" + UserId + GetSystemInfo());
+			HttpRequest->SetURL("https://www.google-analytics.com/collect?v=1&t=pageview&tid=" + ApiTrackingId + "&cid=" + UniversalCid + "&dp=" + EncodeStringsForHTML(ScreenName) + "&geoid=" + Location + "&uid=" + UserId + GetSystemInfo());
 			HttpRequest->SetVerb("GET");
 			HttpRequest->ProcessRequest();
 #endif
