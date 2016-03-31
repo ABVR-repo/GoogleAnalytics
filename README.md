@@ -6,7 +6,7 @@ The **Google Analytics Provider** plugin lets you integrate out-of-the-box Googl
 
 * **Current version:** 1.4
 * **Binaries compiled for:** Unreal Engine 4.11.0
-* **Required Unreal Engine 4.10 or above.**
+* **Required Unreal Engine 4.11 or above.**
 
 ## Features
 * Two special nodes only for Google Analytics Provider plugin: **Record Google Event** and **Record Google Screen**
