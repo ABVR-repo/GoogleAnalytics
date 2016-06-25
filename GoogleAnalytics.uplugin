@@ -15,11 +15,20 @@
     {
       "Name": "GoogleAnalytics",
       "Type": "Runtime",
-      "LoadingPhase": "Default"
+	  "LoadingPhase": "Default",
+	  "WhitelistPlatforms": [
+        "Win64",
+        "Win32",
+        "Linux",
+        "Mac",
+        "IOS",
+        "Android"
+      ]
     }
   ],
-  "EnabledByDefault": false,
+  "EnabledByDefault": true,
   "CanContainContent": false,
   "IsBetaVersion": false,
-  "Installed": false
+  "Installed": true,
+  "RequiresBuildPlatform": false
 }

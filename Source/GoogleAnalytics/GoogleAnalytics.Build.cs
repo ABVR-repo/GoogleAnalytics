@@ -16,13 +16,18 @@ namespace UnrealBuildTool.Rules
 			PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine" });
 			PublicIncludePathModuleNames.Add("Analytics");
 
+			// Third Party
+			var ThirdPartyPath = Path.GetFullPath(Path.Combine(ModuleDirectory, "../ThirdParty/"));
+
 			// Additional Frameworks and Libraries for iOS
 			if (Target.Platform == UnrealTargetPlatform.IOS)
 			{
+				var ThirdPartyIOS = Path.Combine(ThirdPartyPath, "iOS");
+
 				PublicAdditionalFrameworks.Add(
 					new UEBuildFramework(
 						"GoogleAnalytics",
-						"../../ThirdPartyLibraries/iOS/GoogleAnalytics.embeddedframework.zip"
+						Path.Combine(ThirdPartyIOS, "GoogleAnalytics.embeddedframework.zip")
 					)
 				);
 
