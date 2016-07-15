@@ -26,4 +26,4 @@ The **Google Analytics Provider** plugin lets you integrate out-of-the-box Googl
 * And more features provided by Google Analytics
 
 ## User Guide
-More info about plugin and installation instructions you can find in [User Guide](GoogleAnalytics_UserGuide.pdf).
+More info about plugin and installation instructions you can find in [User Guide](Documentation/GoogleAnalytics_UserGuide.pdf).
