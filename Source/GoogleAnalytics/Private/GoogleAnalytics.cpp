@@ -145,7 +145,7 @@ void FAnalyticsGoogleAnalytics::ShutdownModule()
 	FAnalyticsProviderGoogleAnalytics::Destroy();
 }
 
-TSharedPtr<IAnalyticsProvider> FAnalyticsGoogleAnalytics::CreateAnalyticsProvider(const FAnalytics::FProviderConfigurationDelegate& GetConfigValue) const
+TSharedPtr<IAnalyticsProvider> FAnalyticsGoogleAnalytics::CreateAnalyticsProvider(const FAnalyticsProviderConfigurationDelegate& GetConfigValue) const
 {
 	if (GetConfigValue.IsBound())
 	{

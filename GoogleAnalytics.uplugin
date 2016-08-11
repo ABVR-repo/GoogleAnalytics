@@ -1,7 +1,7 @@
 {
   "FileVersion": 3,
   "Version": 1,
-  "VersionName": "1.5.1",
+  "VersionName": "1.6.0",
   "FriendlyName": "Google Analytics Provider",
   "Description": "Google Analytics Provider for all platforms",
   "Category": "Analytics",
@@ -9,7 +9,7 @@
   "CreatedByURL": "http://gamednastudio.com",
   "DocsURL": "http://gamednastudio.com/plugins/docs/GoogleAnalytics_UserGuide.pdf",
   "MarketplaceURL": "",
-  "EngineVersion": "4.12.0",
+  "EngineVersion": "4.13.0",
   "SupportURL": "mailto:support@gamednastudio.com",
   "Modules": [
     {
@@ -28,7 +28,7 @@
   ],
   "EnabledByDefault": true,
   "CanContainContent": false,
-  "IsBetaVersion": false,
+  "IsBetaVersion": true,
   "Installed": true,
   "RequiresBuildPlatform": false
 }

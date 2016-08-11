@@ -10,6 +10,12 @@
 	<log text="GoogleAnalytics init"/>
   </init>
 
+  <AARImports>
+	<insert>
+com.google.android.gms,play-services-analytics,9.2.0
+	</insert>
+</AARImports>
+  
   <!-- optional additions to the GameActivity imports in GameActivity.java -->
   <gameActivityImportAdditions>
 	<insert>
