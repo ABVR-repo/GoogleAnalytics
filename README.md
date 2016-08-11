@@ -4,9 +4,9 @@
 
 The **Google Analytics Provider** plugin lets you integrate out-of-the-box Google Analytics into your Unreal Engine project (compatible with **all platforms**). It fully implements the *Unreal Analytics Provider* system so you can use all available features exposed by this (including *Analytics Blueprint Library*).
 
-* **Current version:** 1.5.1
-* **Binaries compiled for:** Unreal Engine 4.12.5
-* **Required Unreal Engine 4.12 or above.**
+* **Current version:** 1.6.0
+* **Binaries compiled for:** Unreal Engine 4.13 Preview 1
+* **Required Unreal Engine 4.13 or above.**
 
 ## Features
 * Two special nodes only for Google Analytics Provider plugin: **Record Google Event** and **Record Google Screen**
