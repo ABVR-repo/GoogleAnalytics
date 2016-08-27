@@ -8,7 +8,7 @@
   "CreatedBy": "gameDNA studio",
   "CreatedByURL": "http://gamednastudio.com",
   "DocsURL": "http://gamednastudio.com/plugins/docs/GoogleAnalytics_UserGuide.pdf",
-  "MarketplaceURL": "",
+  "MarketplaceURL": "com.epicgames.launcher://ue/marketplace/content/1b3f6c0fc07648b18758f7b883358b3e",
   "EngineVersion": "4.13.0",
   "SupportURL": "mailto:support@gamednastudio.com",
   "Modules": [
