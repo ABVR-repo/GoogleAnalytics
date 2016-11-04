@@ -12,7 +12,7 @@ UGoogleAnalyticsBlueprintLibrary::UGoogleAnalyticsBlueprintLibrary(const FObject
 {
 }
 
-// Record Google Screen
+/** Record Google Screen */
 void UGoogleAnalyticsBlueprintLibrary::RecordGoogleScreen(const FString& ScreenName)
 {
 	TSharedPtr<FAnalyticsProviderGoogleAnalytics> Provider = FAnalyticsProviderGoogleAnalytics::GetProvider();
@@ -22,7 +22,7 @@ void UGoogleAnalyticsBlueprintLibrary::RecordGoogleScreen(const FString& ScreenN
 	}
 }
 
-// Record Google Event
+/** Record Google Event */
 void UGoogleAnalyticsBlueprintLibrary::RecordGoogleEvent(const FString& EventCategory, const FString& EventAction, const FString& EventLabel, const int32 EventValue)
 {
 	TSharedPtr<FAnalyticsProviderGoogleAnalytics> Provider = FAnalyticsProviderGoogleAnalytics::GetProvider();
@@ -55,4 +55,24 @@ FString UGoogleAnalyticsBlueprintLibrary::GetTrackingId()
 		return Provider->GetTrackingId();
 	}
 	return FString("");
+}
+
+/** Record Google Social Interaction */
+void UGoogleAnalyticsBlueprintLibrary::RecordGoogleSocialInteraction(const FString& SocialNetwork, const FString& SocialAction, const FString& SocialTarget)
+{
+	TSharedPtr<FAnalyticsProviderGoogleAnalytics> Provider = FAnalyticsProviderGoogleAnalytics::GetProvider();
+	if (Provider.IsValid())
+	{
+		Provider->RecordSocialInteraction(SocialNetwork, SocialAction, SocialTarget);
+	}
+}
+
+/** Record Google User Timing */ 
+void UGoogleAnalyticsBlueprintLibrary::RecordGoogleUserTiming(const FString& TimingCategory, const int32 TimingValue, const FString& TimingName)
+{
+	TSharedPtr<FAnalyticsProviderGoogleAnalytics> Provider = FAnalyticsProviderGoogleAnalytics::GetProvider();
+	if (Provider.IsValid())
+	{
+		Provider->RecordUserTiming(TimingCategory, TimingValue, TimingName);
+	}
 }

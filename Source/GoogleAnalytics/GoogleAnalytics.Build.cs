@@ -10,55 +10,59 @@ namespace UnrealBuildTool.Rules
 	{
 		public GoogleAnalytics(TargetInfo Target)
 		{
-			Definitions.Add("WITH_GOOGLEANALYTICS=1");
-
 			PrivateDependencyModuleNames.AddRange(new string[] { "Analytics" });
 			PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine" });
 			PublicIncludePathModuleNames.Add("Analytics");
 
+			string PluginPath = Utils.MakePathRelativeTo(ModuleDirectory, BuildConfiguration.RelativeEnginePath);
+			bool bHasGoogleAnalyticsSDK = false;
+
 			// Additional Frameworks and Libraries for iOS
 			if (Target.Platform == UnrealTargetPlatform.IOS)
 			{
-				PublicAdditionalFrameworks.Add(
-					new UEBuildFramework(
-						"GoogleAnalytics",
-						"../ThirdParty/iOS/GoogleAnalytics.embeddedframework.zip"
-					)
-				);
-
 				PublicFrameworks.AddRange(
 					new string[] {
-						"CoreTelephony",
-						"SystemConfiguration",
-						"UIKit",
-						"Foundation",
-						"CoreGraphics",
-						"MobileCoreServices",
-						"StoreKit",
-						"CFNetwork",
 						"CoreData",
-						"Security",
-						"CoreLocation",
-						"iAd",
-						"AdSupport",
-						"SystemConfiguration"
+						"SystemConfiguration",
+						"AdSupport"
 					}
 				);
 
 				PublicAdditionalLibraries.Add("sqlite3");
 				PublicAdditionalLibraries.Add("z");
+
+				bHasGoogleAnalyticsSDK = (Directory.Exists(Path.Combine(PluginPath, "..", "ThirdParty")) &&
+									      Directory.Exists(Path.Combine(PluginPath, "..", "ThirdParty", "IOS")));
+
+				if (bHasGoogleAnalyticsSDK)
+				{
+					PublicIncludePaths.Add(PluginPath + "../../ThirdParty/IOS");
+					PublicAdditionalLibraries.Add(PluginPath + "../../ThirdParty/IOS/libGoogleAnalyticsServices.a");
+					PublicAdditionalLibraries.Add(PluginPath + "../../ThirdParty/IOS/libAdIdAccess.a");
+				}
 			}
 			// Additional Frameworks and Libraries for Android
 			else if (Target.Platform == UnrealTargetPlatform.Android)
 			{
+				bHasGoogleAnalyticsSDK = true;
 				PrivateDependencyModuleNames.AddRange(new string[] { "Launch" });
-				string PluginPath = Utils.MakePathRelativeTo(ModuleDirectory, BuildConfiguration.RelativeEnginePath);
 				AdditionalPropertiesForReceipt.Add(new ReceiptProperty("AndroidPlugin", Path.Combine(PluginPath, "GoogleAnalytics_APL.xml")));
 			}
 			// Other platforms
 			else
 			{
+				bHasGoogleAnalyticsSDK = true;
 				PublicDependencyModuleNames.AddRange(new string[] { "HTTP", "Json" });
+			}
+
+			if (bHasGoogleAnalyticsSDK)
+			{
+				Definitions.Add("WITH_GOOGLEANALYTICS=1");
+			}
+			else
+			{
+				Definitions.Add("WITH_GOOGLEANALYTICS=0");
+				Log.TraceError("Google Analytics SDK not installed!");
 			}
 		}
 	}

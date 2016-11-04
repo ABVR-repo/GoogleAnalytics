@@ -22,6 +22,14 @@ class GOOGLEANALYTICS_API UGoogleAnalyticsBlueprintLibrary : public UBlueprintFu
 	UFUNCTION(BlueprintCallable, Category = "Analytics")
 	static void RecordGoogleEvent(const FString& EventCategory, const FString& EventAction, const FString& EventLabel, const int32 EventValue);
 
+	/** Records a social interaction (only for Google Analytics) */
+	UFUNCTION(BlueprintCallable, Category = "Analytics")
+	static void RecordGoogleSocialInteraction(const FString& SocialNetwork, const FString& SocialAction, const FString& SocialTarget);
+
+	/** Records an user timing (only for Google Analytics) */
+	UFUNCTION(BlueprintCallable, Category = "Analytics")
+	static void RecordGoogleUserTiming(const FString& TimingCategory, const int32 TimingValue, const FString& TimingName);
+
 	/** Set new Tracking Id (only for Google Analytics) */
 	UFUNCTION(BlueprintCallable, Category = "Analytics")
 	static void SetTrackingId(const FString& TrackingId);

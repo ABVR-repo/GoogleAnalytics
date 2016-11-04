@@ -23,6 +23,7 @@ com.google.android.gms,play-services-analytics,9.2.0
 	  import com.google.android.gms.analytics.Tracker;
 	  import com.google.android.gms.analytics.HitBuilders;
 	  import com.google.android.gms.analytics.Logger.LogLevel;
+	  import android.net.Uri;
 	</insert>
   </gameActivityImportAdditions>
 
@@ -34,21 +35,33 @@ com.google.android.gms,play-services-analytics,9.2.0
 		</intent-filter>
 	  </receiver>
 	  <service android:name="com.google.android.gms.analytics.AnalyticsService"
-        android:enabled="true" android:exported="false" />
+			   android:enabled="true" android:exported="false" />
 	  <receiver android:name="com.google.android.gms.analytics.CampaignTrackingReceiver"
-        android:exported="true">
+				android:enabled="true"
+				android:exported="true">
 		<intent-filter>
 		  <action android:name="com.android.vending.INSTALL_REFERRER" />
 		</intent-filter>
 	  </receiver>
-	  <service android:name="com.google.android.gms.analytics.CampaignTrackingService" />
+	  <service android:name="com.google.android.gms.analytics.CampaignTrackingService"
+			   android:enabled="true"
+			   android:exported="false" />
 	</addElements>
   </androidManifestUpdates>
 
   <!-- optional additions to the GameActivity class in GameActivity.java -->
   <gameActivityClassAdditions>
 	<insert>
+	  private String GoogleAnalyticsReferrer;
 	  private Tracker mTracker;
+
+	  String getReferrerFromUri(Uri uri) 
+	  {
+		  if (uri == null) { return ""; }
+
+		  return uri.toString();
+	  }
+	  
 	  synchronized public void AndroidThunkJava_GoogleAnalyticsStartSession(String TrackingId, int DispatchInterval)
 	  {
 		  try 
@@ -67,6 +80,14 @@ com.google.android.gms,play-services-analytics,9.2.0
 					  mTracker.enableExceptionReporting(true);
 					  mTracker.setSessionTimeout(300);
 				  }
+			  }
+			  
+			  if(mTracker != null) 
+			  {
+				  mTracker.setScreenName("Game Launched");
+				  mTracker.send(new HitBuilders.ScreenViewBuilder()
+					  .setCampaignParamsFromUrl(GoogleAnalyticsReferrer)
+					  .build());
 			  }
 		  } 
 		  catch(Exception e) 
@@ -225,6 +246,58 @@ com.google.android.gms,play-services-analytics,9.2.0
 			  e.printStackTrace();
 		  }
 	  }
+	  
+	  public void AndroidThunkJava_GoogleAnalyticsRecordSocialInteraction(String Network, String Action, String Target)
+	  {
+		  try 
+		  {
+			  if(mTracker != null) 
+			  {
+				  HitBuilders.SocialBuilder socialBuilder = new HitBuilders.SocialBuilder();
+				  socialBuilder.setNetwork(Network);
+				  socialBuilder.setAction(Action);
+
+				  if (!Target.equals(""))
+				  {
+					  socialBuilder.setTarget(Target);
+				  }
+
+				  mTracker.send(socialBuilder.build());
+			  }
+		  } 
+		  catch(Exception e) 
+		  {
+			  e.printStackTrace();
+		  }
+	  }
+	  
+	  public void AndroidThunkJava_GoogleAnalyticsRecordUserTiming(String Category, int Value, String Name)
+	  {
+		  try 
+		  {
+			  if(mTracker != null) 
+			  {
+				  HitBuilders.TimingBuilder timingBuilder = new HitBuilders.TimingBuilder();
+				  timingBuilder.setCategory(Category);
+				  timingBuilder.setValue(Value);
+				  timingBuilder.setVariable(Name);
+
+				  mTracker.send(timingBuilder.build());
+			  }
+		  } 
+		  catch(Exception e) 
+		  {
+			  e.printStackTrace();
+		  }
+	  }
 	</insert>
   </gameActivityClassAdditions>
+
+  <gameActivityOnStartAdditions>
+	<insert>
+		Intent intent = this.getIntent();
+		Uri uri = intent.getData();
+		GoogleAnalyticsReferrer = getReferrerFromUri(uri);
+	</insert>
+  </gameActivityOnStartAdditions>
 </root>

@@ -7,9 +7,12 @@
 #include <string>
 
 #if PLATFORM_IOS
-#import <GoogleAnalytics/GAI.h>
-#import <GoogleAnalytics/GAIFields.h>
-#import <GoogleAnalytics/GAIDictionaryBuilder.h>
+#if WITH_GOOGLEANALYTICS
+#import "GAI.h"
+#import "GAIFields.h"
+#import "GAIDictionaryBuilder.h"
+#include "IOSAppDelegate.h"
+#endif
 #elif PLATFORM_ANDROID
 #include "Android/AndroidJNI.h"
 #include "Android/AndroidApplication.h"
@@ -133,11 +136,56 @@ void AndroidThunkCpp_GoogleAnalyticsRecordCurrencyPurchase(const FString& Transa
 	}
 }
 
+void AndroidThunkCpp_GoogleAnalyticsRecordSocialInteraction(const FString& Network, const FString& Action, const FString& Target)
+{
+	if (JNIEnv* Env = FAndroidApplication::GetJavaEnv())
+	{
+		jstring NetworkFinal = Env->NewStringUTF(TCHAR_TO_UTF8(*Network));
+		jstring ActionFinal = Env->NewStringUTF(TCHAR_TO_UTF8(*Action));
+		jstring TargetFinal = Env->NewStringUTF(TCHAR_TO_UTF8(*Target));
+		static jmethodID Method = FJavaWrapper::FindMethod(Env, FJavaWrapper::GameActivityClassID, "AndroidThunkJava_GoogleAnalyticsRecordSocialInteraction", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V", false);
+		FJavaWrapper::CallVoidMethod(Env, FJavaWrapper::GameActivityThis, Method, NetworkFinal, ActionFinal, TargetFinal);
+		Env->DeleteLocalRef(NetworkFinal);
+		Env->DeleteLocalRef(ActionFinal);
+		Env->DeleteLocalRef(TargetFinal);
+	}
+}
+
+void AndroidThunkCpp_GoogleAnalyticsRecordUserTiming(const FString& Category, const int32& Value, const FString& Name)
+{
+	if (JNIEnv* Env = FAndroidApplication::GetJavaEnv())
+	{
+		jstring CategoryFinal = Env->NewStringUTF(TCHAR_TO_UTF8(*Category));
+		jstring NameFinal = Env->NewStringUTF(TCHAR_TO_UTF8(*Name));
+		static jmethodID Method = FJavaWrapper::FindMethod(Env, FJavaWrapper::GameActivityClassID, "AndroidThunkJava_GoogleAnalyticsRecordUserTiming", "(Ljava/lang/String;ILjava/lang/String;)V", false);
+		FJavaWrapper::CallVoidMethod(Env, FJavaWrapper::GameActivityThis, Method, CategoryFinal, Value, NameFinal);
+		Env->DeleteLocalRef(CategoryFinal);
+		Env->DeleteLocalRef(NameFinal);
+	}
+}
+
 #endif
 
+#if PLATFORM_IOS && WITH_GOOGLEANALYTICS
+static void ListenGoogleAnalyticsOpenURL(UIApplication* application, NSURL* url, NSString* sourceApplication, id annotation)
+{
+	if(url != nil)
+	{
+		TSharedPtr<FAnalyticsProviderGoogleAnalytics> Provider = FAnalyticsProviderGoogleAnalytics::GetProvider();
+		if (Provider.IsValid())
+		{
+			Provider->SetOpenUrlIOS(FString([url absoluteString]));
+			Provider->SetOpenUrlHostIOS(FString([url host]));
+		}
+	}
+}
+#endif
 
 void FAnalyticsGoogleAnalytics::StartupModule()
 {
+#if PLATFORM_IOS && WITH_GOOGLEANALYTICS
+	FIOSCoreDelegates::OnOpenURL.AddStatic(&ListenGoogleAnalyticsOpenURL);
+#endif
 }
 
 void FAnalyticsGoogleAnalytics::ShutdownModule()
@@ -151,7 +199,11 @@ TSharedPtr<IAnalyticsProvider> FAnalyticsGoogleAnalytics::CreateAnalyticsProvide
 	{
 		FString TrackingId = FString("");
 #if PLATFORM_IOS
+#if WITH_GOOGLEANALYTICS
 		TrackingId = GetConfigValue.Execute(TEXT("TrackingIdIOS"), true);
+#else
+		UE_LOG(LogAnalytics, Warning, TEXT("WITH_GOOGLEANALYTICS=0. Are you missing the SDK?"));
+#endif
 #elif PLATFORM_ANDROID
 		TrackingId = GetConfigValue.Execute(TEXT("TrackingIdAndroid"), true);
 #else
@@ -189,6 +241,7 @@ bool FAnalyticsProviderGoogleAnalytics::StartSession(const TArray<FAnalyticsEven
 	if (!bHasSessionStarted && ApiTrackingId.Len() > 0)
 	{
 #if PLATFORM_IOS
+#if WITH_GOOGLEANALYTICS
 		if (Interval > 0)
 		{
 			[[GAI sharedInstance] setDispatchInterval:Interval];
@@ -199,6 +252,23 @@ bool FAnalyticsProviderGoogleAnalytics::StartSession(const TArray<FAnalyticsEven
 		{
 			tracker.allowIDFACollection = YES;
 		}
+
+		if (OpenUrlIOS.Len() > 0 && tracker != nil)
+		{
+			GAIDictionaryBuilder *hitParams = [[GAIDictionaryBuilder alloc] init];
+			[hitParams setCampaignParametersFromUrl : OpenUrlIOS.GetNSString()];
+			if (![hitParams get : kGAICampaignSource] && OpenUrlHostIOS.GetNSString().length != 0)
+			{
+				[hitParams set : @"referrer" forKey : kGAICampaignMedium];
+				[hitParams set : OpenUrlHostIOS.GetNSString() forKey : kGAICampaignSource];
+			}
+			NSDictionary *hitParamsDict = [hitParams build];
+			[tracker set : kGAIScreenName value : @"Game Launched"];
+			[tracker send : [[[GAIDictionaryBuilder createScreenView] setAll:hitParamsDict] build]];
+		}
+#else
+		UE_LOG(LogAnalytics, Warning, TEXT("WITH_GOOGLEANALYTICS=0. Are you missing the SDK?"));
+#endif
 #elif PLATFORM_ANDROID
 		AndroidThunkCpp_GoogleAnalyticsStartSession(ApiTrackingId, Interval);
 #else
@@ -215,6 +285,8 @@ bool FAnalyticsProviderGoogleAnalytics::StartSession(const TArray<FAnalyticsEven
 		}
 
 		GConfig->SetString(TEXT("GoogleAnalytics"), TEXT("UniversalCid"), *UniversalCid, GEngineIni);
+
+		RecordScreen("Game Launched");
 #endif
 		if (Attributes.Num() > 0)
 		{
@@ -231,7 +303,11 @@ void FAnalyticsProviderGoogleAnalytics::EndSession()
 	if (bHasSessionStarted)
 	{
 #if PLATFORM_IOS
+#if WITH_GOOGLEANALYTICS
 		[[GAI sharedInstance] removeTrackerByName:@"DefaultTracker"];
+#else
+		UE_LOG(LogAnalytics, Warning, TEXT("WITH_GOOGLEANALYTICS=0. Are you missing the SDK?"));
+#endif
 #endif
 		bHasSessionStarted = false;
 		bSessionStartedSent = false;
@@ -249,6 +325,26 @@ void FAnalyticsProviderGoogleAnalytics::SetTrackingId(const FString& TrackingId)
 FString FAnalyticsProviderGoogleAnalytics::GetTrackingId()
 {
 	return ApiTrackingId;
+}
+
+void FAnalyticsProviderGoogleAnalytics::SetOpenUrlIOS(const FString& OpenUrl)
+{
+	OpenUrlIOS = OpenUrl;
+}
+
+FString FAnalyticsProviderGoogleAnalytics::GetOpenUrlIOS()
+{
+	return OpenUrlIOS;
+}
+
+void FAnalyticsProviderGoogleAnalytics::SetOpenUrlHostIOS(const FString& OpenUrlHost)
+{
+	OpenUrlHostIOS = OpenUrlHost;
+}
+
+FString FAnalyticsProviderGoogleAnalytics::GetOpenUrlHostIOS()
+{
+	return OpenUrlHostIOS;
 }
 
 FString FAnalyticsProviderGoogleAnalytics::GetSystemInfo()
@@ -275,7 +371,11 @@ void FAnalyticsProviderGoogleAnalytics::FlushEvents()
 	if (bHasSessionStarted)
 	{
 #if PLATFORM_IOS
+#if WITH_GOOGLEANALYTICS
 		[[GAI sharedInstance] dispatch];
+#else
+		UE_LOG(LogAnalytics, Warning, TEXT("WITH_GOOGLEANALYTICS=0. Are you missing the SDK?"));
+#endif
 #elif PLATFORM_ANDROID
 		AndroidThunkCpp_GoogleAnalyticsFlushEvents();
 #endif
@@ -287,12 +387,16 @@ void FAnalyticsProviderGoogleAnalytics::SetUserID(const FString& InUserId)
 	if (bHasSessionStarted)
 	{
 #if PLATFORM_IOS
+#if WITH_GOOGLEANALYTICS
 		id<GAITracker> tracker = [[GAI sharedInstance] defaultTracker];
 
 		if (tracker != nil)
 		{
 			[tracker set : kGAIUserId value : InUserId.GetNSString()];
 		}
+#else
+		UE_LOG(LogAnalytics, Warning, TEXT("WITH_GOOGLEANALYTICS=0. Are you missing the SDK?"));
+#endif
 #elif PLATFORM_ANDROID
 		AndroidThunkCpp_GoogleAnalyticsSetUserId(InUserId);
 #else
@@ -306,6 +410,7 @@ FString FAnalyticsProviderGoogleAnalytics::GetUserID() const
 	if (bHasSessionStarted)
 	{
 #if PLATFORM_IOS
+#if WITH_GOOGLEANALYTICS
 		id<GAITracker> tracker = [[GAI sharedInstance] defaultTracker];
 
 		if (tracker)
@@ -316,6 +421,9 @@ FString FAnalyticsProviderGoogleAnalytics::GetUserID() const
 		{
 			return FString();
 		}
+#else
+		UE_LOG(LogAnalytics, Warning, TEXT("WITH_GOOGLEANALYTICS=0. Are you missing the SDK?"));
+#endif
 #elif PLATFORM_ANDROID
 		return AndroidThunkCpp_GoogleAnalyticsGetUserId();
 #else
@@ -351,12 +459,16 @@ void FAnalyticsProviderGoogleAnalytics::SetLocation(const FString& InLocation)
 	if (bHasSessionStarted)
 	{
 #if PLATFORM_IOS
+#if WITH_GOOGLEANALYTICS
 		id<GAITracker> tracker = [[GAI sharedInstance] defaultTracker];
 
 		if (tracker != nil)
 		{
 			[tracker set : kGAILocation value : InLocation.GetNSString()];
 		}
+#else
+		UE_LOG(LogAnalytics, Warning, TEXT("WITH_GOOGLEANALYTICS=0. Are you missing the SDK?"));
+#endif
 #elif PLATFORM_ANDROID
 		AndroidThunkCpp_GoogleAnalyticsSetLocation(InLocation);
 #else 
@@ -423,6 +535,7 @@ void FAnalyticsProviderGoogleAnalytics::RecordEvent(const FString& EventName, co
 			}
 
 #if PLATFORM_IOS
+#if WITH_GOOGLEANALYTICS
 			NSString* EventLabel = Label.Len() > 0 ? Label.GetNSString() : nil;
 			id<GAITracker> tracker = [[GAI sharedInstance] defaultTracker];
 
@@ -433,6 +546,9 @@ void FAnalyticsProviderGoogleAnalytics::RecordEvent(const FString& EventName, co
 					label : EventLabel
 					value : @(Value)] build]];
 			}
+#else
+			UE_LOG(LogAnalytics, Warning, TEXT("WITH_GOOGLEANALYTICS=0. Are you missing the SDK?"));
+#endif
 #elif PLATFORM_ANDROID
 			AndroidThunkCpp_GoogleAnalyticsRecordEvent(Category, EventName, Label, Value);
 #else 
@@ -452,6 +568,7 @@ void FAnalyticsProviderGoogleAnalytics::RecordScreen(const FString& ScreenName)
 		if (ScreenName.Len() > 0)
 		{
 #if PLATFORM_IOS
+#if WITH_GOOGLEANALYTICS
 			id<GAITracker> tracker = [[GAI sharedInstance] defaultTracker];
 
 			if (tracker != nil)
@@ -459,11 +576,73 @@ void FAnalyticsProviderGoogleAnalytics::RecordScreen(const FString& ScreenName)
 				[tracker set : kGAIScreenName value : ScreenName.GetNSString()];
 				[tracker send : [[GAIDictionaryBuilder createScreenView] build]];
 			}
+#else
+			UE_LOG(LogAnalytics, Warning, TEXT("WITH_GOOGLEANALYTICS=0. Are you missing the SDK?"));
+#endif
 #elif PLATFORM_ANDROID
 			AndroidThunkCpp_GoogleAnalyticsRecordScreen(ScreenName);
 #else
 			TSharedRef<IHttpRequest> HttpRequest = FHttpModule::Get().CreateRequest();
 			HttpRequest->SetURL("https://www.google-analytics.com/collect?v=1&t=pageview&tid=" + ApiTrackingId + "&cid=" + UniversalCid + "&dp=" + EncodeStringsForHTML(ScreenName) + "&geoid=" + Location + "&uid=" + UserId + GetSystemInfo());
+			HttpRequest->SetVerb("GET");
+			HttpRequest->ProcessRequest();
+#endif
+		}
+	}
+}
+
+void FAnalyticsProviderGoogleAnalytics::RecordSocialInteraction(const FString& Network, const FString& Action, const FString& Target)
+{
+	if (bHasSessionStarted)
+	{
+		if (Network.Len() > 0 && Action.Len() > 0)
+		{
+#if PLATFORM_IOS
+#if WITH_GOOGLEANALYTICS
+			id<GAITracker> tracker = [[GAI sharedInstance] defaultTracker];
+
+			if (tracker != nil)
+			{
+				NSString* EventTarget = Target.Len() > 0 ? Target.GetNSString() : nil;
+				[tracker send : [[GAIDictionaryBuilder createSocialWithNetwork : Network.GetNSString() action : Action.GetNSString() target : EventTarget] build]];
+			}
+#else
+			UE_LOG(LogAnalytics, Warning, TEXT("WITH_GOOGLEANALYTICS=0. Are you missing the SDK?"));
+#endif
+#elif PLATFORM_ANDROID
+			AndroidThunkCpp_GoogleAnalyticsRecordSocialInteraction(Network, Action, Target);
+#else
+			TSharedRef<IHttpRequest> HttpRequest = FHttpModule::Get().CreateRequest();
+			HttpRequest->SetURL("https://www.google-analytics.com/collect?v=1&t=social&tid=" + ApiTrackingId + "&cid=" + UniversalCid + "&geoid=" + Location + "&uid=" + UserId + "&sn=" + EncodeStringsForHTML(Network) + "&sa=" + EncodeStringsForHTML(Action) + "&st=" + EncodeStringsForHTML(Target) + GetSystemInfo());
+			HttpRequest->SetVerb("GET");
+			HttpRequest->ProcessRequest();
+#endif
+		}
+	}
+}
+
+void FAnalyticsProviderGoogleAnalytics::RecordUserTiming(const FString& Category, const int32 Value, const FString& Name)
+{
+	if (bHasSessionStarted)
+	{
+		if (Category.Len() > 0)
+		{
+#if PLATFORM_IOS
+#if WITH_GOOGLEANALYTICS
+			id<GAITracker> tracker = [[GAI sharedInstance] defaultTracker];
+
+			if (tracker != nil)
+			{
+				[tracker send : [[GAIDictionaryBuilder createTimingWithCategory : Category.GetNSString() interval : @((NSUInteger)(Value)) name:Name.GetNSString() label:nil] build]];
+			}
+#else
+			UE_LOG(LogAnalytics, Warning, TEXT("WITH_GOOGLEANALYTICS=0. Are you missing the SDK?"));
+#endif
+#elif PLATFORM_ANDROID
+			AndroidThunkCpp_GoogleAnalyticsRecordUserTiming(Category, Value, Name);
+#else
+			TSharedRef<IHttpRequest> HttpRequest = FHttpModule::Get().CreateRequest();
+			HttpRequest->SetURL("https://www.google-analytics.com/collect?v=1&t=timing&tid=" + ApiTrackingId + "&cid=" + UniversalCid + "&geoid=" + Location + "&uid=" + UserId + "&utc=" + EncodeStringsForHTML(Category) + "&utv=" + EncodeStringsForHTML(Name) + "&utt=" + FString::FromInt(Value) + GetSystemInfo());
 			HttpRequest->SetVerb("GET");
 			HttpRequest->ProcessRequest();
 #endif
@@ -527,6 +706,7 @@ void FAnalyticsProviderGoogleAnalytics::RecordCurrencyPurchase(const FString& Ga
 			FString TransactionId = FMD5::HashAnsiString(*(GameCurrencyType + RealCurrencyType + PaymentProvider + FDateTime::Now().ToString()));
 
 #if PLATFORM_IOS
+#if WITH_GOOGLEANALYTICS
 			id<GAITracker> tracker = [[GAI sharedInstance] defaultTracker];
 
 			if (tracker != nil)
@@ -546,6 +726,9 @@ void FAnalyticsProviderGoogleAnalytics::RecordCurrencyPurchase(const FString& Ga
 							quantity:@(GameCurrencyAmount)
 									 currencyCode : RealCurrencyType.GetNSString()] build]];
 			}
+#else
+			UE_LOG(LogAnalytics, Warning, TEXT("WITH_GOOGLEANALYTICS=0. Are you missing the SDK?"));
+#endif
 #elif PLATFORM_ANDROID
 			AndroidThunkCpp_GoogleAnalyticsRecordCurrencyPurchase(TransactionId, GameCurrencyType, GameCurrencyAmount, RealCurrencyType, RealMoneyCost, PaymentProvider);
 #else
@@ -581,6 +764,7 @@ void FAnalyticsProviderGoogleAnalytics::RecordError(const FString& Error, const 
 		if (Error.Len() > 0)
 		{
 #if PLATFORM_IOS
+#if WITH_GOOGLEANALYTICS
 			id<GAITracker> tracker = [[GAI sharedInstance] defaultTracker];
 
 			if (tracker != nil)
@@ -589,6 +773,9 @@ void FAnalyticsProviderGoogleAnalytics::RecordError(const FString& Error, const 
 					createExceptionWithDescription : Error.GetNSString()
 					withFatal : @NO] build]];
 			}
+#else
+			UE_LOG(LogAnalytics, Warning, TEXT("WITH_GOOGLEANALYTICS=0. Are you missing the SDK?"));
+#endif
 #elif PLATFORM_ANDROID
 			AndroidThunkCpp_GoogleAnalyticsRecordError(Error);
 #else

@@ -19,6 +19,8 @@ class FAnalyticsProviderGoogleAnalytics :
 	FString UniversalCid;
 	FString Location;
 	int32 Interval;
+	FString OpenUrlIOS;
+	FString OpenUrlHostIOS;
 
 	static TSharedPtr<IAnalyticsProvider> Provider;
 	FAnalyticsProviderGoogleAnalytics(const FString TrackingId, const int32 SendInterval);
@@ -60,6 +62,8 @@ public:
 
 	virtual void RecordEvent(const FString& EventName, const TArray<FAnalyticsEventAttribute>& Attributes) override;
 	void RecordScreen(const FString& ScreenName);
+	void RecordSocialInteraction(const FString& Network, const FString& Action, const FString& Target);
+	void RecordUserTiming(const FString& Category, const int32 Value, const FString& Name);
 	virtual void RecordItemPurchase(const FString& ItemId, int ItemQuantity, const TArray<FAnalyticsEventAttribute>& EventAttrs) override;
 	virtual void RecordCurrencyPurchase(const FString& GameCurrencyType, int GameCurrencyAmount, const TArray<FAnalyticsEventAttribute>& EventAttrs) override;
 	virtual void RecordCurrencyGiven(const FString& GameCurrencyType, int GameCurrencyAmount, const TArray<FAnalyticsEventAttribute>& EventAttrs) override;
@@ -70,4 +74,10 @@ public:
 	FString GetTrackingId();
 
 	FString GetSystemInfo();
+	
+	void SetOpenUrlIOS(const FString& OpenUrl);
+	FString GetOpenUrlIOS();
+
+	void SetOpenUrlHostIOS(const FString& OpenUrlHost);
+	FString GetOpenUrlHostIOS();
 };
