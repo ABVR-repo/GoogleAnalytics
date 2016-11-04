@@ -12,7 +12,6 @@ The **Google Analytics Provider** plugin lets you integrate out-of-the-box Googl
 * Four special nodes only for Google Analytics Provider plugin: **Record Google Event**, **Record Google Screen**, **Record Google Social Interaction**, **Record Google User Timing**
 * Implements Unreal Analytics Provider system
 * All features are exposed to Blueprints
-* No additional libraries are needed!
 * Works with Blueprint-only & source code projects.
 * Works with Launcher & GitHub UE4 versions.
 * Real-time sessions tracking (you can see who is currently playing your game!)
