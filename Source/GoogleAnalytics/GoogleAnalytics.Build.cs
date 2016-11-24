@@ -14,7 +14,9 @@ namespace UnrealBuildTool.Rules
 			PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine" });
 			PublicIncludePathModuleNames.Add("Analytics");
 
-			string PluginPath = Utils.MakePathRelativeTo(ModuleDirectory, BuildConfiguration.RelativeEnginePath);
+			string ThirdPartyPath = Path.Combine(ModuleDirectory, "..", "ThirdParty");
+			string ThirdPartyIOSPath = Path.Combine(ThirdPartyPath, "IOS");
+
 			bool bHasGoogleAnalyticsSDK = false;
 
 			// Additional Frameworks and Libraries for iOS
@@ -31,14 +33,16 @@ namespace UnrealBuildTool.Rules
 				PublicAdditionalLibraries.Add("sqlite3");
 				PublicAdditionalLibraries.Add("z");
 
-				bHasGoogleAnalyticsSDK = (Directory.Exists(Path.Combine(PluginPath, "..", "ThirdParty")) &&
-									      Directory.Exists(Path.Combine(PluginPath, "..", "ThirdParty", "IOS")));
+				bHasGoogleAnalyticsSDK = (Directory.Exists(ThirdPartyPath) &&
+										  Directory.Exists(ThirdPartyIOSPath) &&
+										  File.Exists(Path.Combine(ThirdPartyIOSPath, "libAdIdAccess.a")) &&
+										  File.Exists(Path.Combine(ThirdPartyIOSPath, "libGoogleAnalyticsServices.a")));
 
 				if (bHasGoogleAnalyticsSDK)
 				{
-					PublicIncludePaths.Add(PluginPath + "../../ThirdParty/IOS");
-					PublicAdditionalLibraries.Add(PluginPath + "../../ThirdParty/IOS/libGoogleAnalyticsServices.a");
-					PublicAdditionalLibraries.Add(PluginPath + "../../ThirdParty/IOS/libAdIdAccess.a");
+					PublicIncludePaths.Add(ThirdPartyIOSPath);
+					PublicAdditionalLibraries.Add(Path.Combine(ThirdPartyIOSPath, "libAdIdAccess.a"));
+					PublicAdditionalLibraries.Add(Path.Combine(ThirdPartyIOSPath, "libGoogleAnalyticsServices.a"));
 				}
 			}
 			// Additional Frameworks and Libraries for Android
@@ -46,6 +50,7 @@ namespace UnrealBuildTool.Rules
 			{
 				bHasGoogleAnalyticsSDK = true;
 				PrivateDependencyModuleNames.AddRange(new string[] { "Launch" });
+				string PluginPath = Utils.MakePathRelativeTo(ModuleDirectory, BuildConfiguration.RelativeEnginePath);
 				AdditionalPropertiesForReceipt.Add(new ReceiptProperty("AndroidPlugin", Path.Combine(PluginPath, "GoogleAnalytics_APL.xml")));
 			}
 			// Other platforms
