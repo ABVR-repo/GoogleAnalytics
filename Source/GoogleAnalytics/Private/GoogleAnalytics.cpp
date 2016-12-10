@@ -351,7 +351,7 @@ FString FAnalyticsProviderGoogleAnalytics::GetSystemInfo()
 {
 	FString SystemInfo = FString("");
 
-	if (GEngine->GameViewport)
+	if (GEngine->GameViewport && GEngine->GameViewport->Viewport)
 	{
 		const FVector2D ViewportSize = FVector2D(GEngine->GameViewport->Viewport->GetSizeXY());
 		SystemInfo += FString("&ul=" + FInternationalization::Get().GetCurrentCulture()->GetName() + "&ua=Windows&sr=" + FString::FromInt(ViewportSize.X) + "x" + FString::FromInt(ViewportSize.Y) + "&vp=" + FString::FromInt(ViewportSize.X) + "x" + FString::FromInt(ViewportSize.Y));
