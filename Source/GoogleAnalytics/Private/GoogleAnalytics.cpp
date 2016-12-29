@@ -4,6 +4,7 @@
 
 #include "GoogleAnalyticsPrivatePCH.h"
 #include "Runtime/Core/Public/Misc/SecureHash.h"
+#include "Runtime/Online/HTTP/Public/GenericPlatform/GenericPlatformHttp.h"
 #include <string>
 
 #if PLATFORM_IOS
@@ -493,20 +494,6 @@ bool FAnalyticsProviderGoogleAnalytics::SetSessionID(const FString& InSessionID)
 	return true;
 }
 
-FString EncodeStringsForHTML(FString ToBeEncoded)
-{
-	ToBeEncoded = ToBeEncoded.Replace(TEXT(" "), TEXT("%20"), ESearchCase::IgnoreCase);
-	ToBeEncoded = ToBeEncoded.Replace(TEXT("&"), TEXT("%26"), ESearchCase::IgnoreCase);
-	ToBeEncoded = ToBeEncoded.Replace(TEXT("#"), TEXT("%23"), ESearchCase::IgnoreCase);
-	ToBeEncoded = ToBeEncoded.Replace(TEXT("\""), TEXT("%22"), ESearchCase::IgnoreCase);
-	ToBeEncoded = ToBeEncoded.Replace(TEXT("?"), TEXT("%3F"), ESearchCase::IgnoreCase);
-	ToBeEncoded = ToBeEncoded.Replace(TEXT("@"), TEXT("%40"), ESearchCase::IgnoreCase);
-	ToBeEncoded = ToBeEncoded.Replace(TEXT(":"), TEXT("%3A"), ESearchCase::IgnoreCase);
-	ToBeEncoded = ToBeEncoded.Replace(TEXT("_"), TEXT("%5F"), ESearchCase::IgnoreCase);
-
-	return ToBeEncoded;
-}
-
 void FAnalyticsProviderGoogleAnalytics::RecordEvent(const FString& EventName, const TArray<FAnalyticsEventAttribute>& Attributes)
 {
 	if (bHasSessionStarted)
@@ -553,7 +540,7 @@ void FAnalyticsProviderGoogleAnalytics::RecordEvent(const FString& EventName, co
 			AndroidThunkCpp_GoogleAnalyticsRecordEvent(Category, EventName, Label, Value);
 #else 
 			TSharedRef<IHttpRequest> HttpRequest = FHttpModule::Get().CreateRequest();
-			HttpRequest->SetURL("https://www.google-analytics.com/collect?v=1&t=event&tid=" + ApiTrackingId + "&cid=" + UniversalCid + "&ec=" + EncodeStringsForHTML(Category) + "&ea=" + EncodeStringsForHTML(Action) + "&el=" + EncodeStringsForHTML(Label) + "&ev=" + FString::FromInt(Value) + "&geoid=" + Location + "&uid=" + UserId + GetSystemInfo());
+			HttpRequest->SetURL("https://www.google-analytics.com/collect?v=1&t=event&tid=" + ApiTrackingId + "&cid=" + UniversalCid + "&ec=" + FGenericPlatformHttp::UrlEncode(Category) + "&ea=" + FGenericPlatformHttp::UrlEncode(Action) + "&el=" + FGenericPlatformHttp::UrlEncode(Label) + "&ev=" + FString::FromInt(Value) + "&geoid=" + Location + "&uid=" + UserId + GetSystemInfo());
 			HttpRequest->SetVerb("GET");
 			HttpRequest->ProcessRequest();
 #endif
@@ -583,7 +570,7 @@ void FAnalyticsProviderGoogleAnalytics::RecordScreen(const FString& ScreenName)
 			AndroidThunkCpp_GoogleAnalyticsRecordScreen(ScreenName);
 #else
 			TSharedRef<IHttpRequest> HttpRequest = FHttpModule::Get().CreateRequest();
-			HttpRequest->SetURL("https://www.google-analytics.com/collect?v=1&t=pageview&tid=" + ApiTrackingId + "&cid=" + UniversalCid + "&dp=" + EncodeStringsForHTML(ScreenName) + "&geoid=" + Location + "&uid=" + UserId + GetSystemInfo());
+			HttpRequest->SetURL("https://www.google-analytics.com/collect?v=1&t=pageview&tid=" + ApiTrackingId + "&cid=" + UniversalCid + "&dp=" + FGenericPlatformHttp::UrlEncode(ScreenName) + "&geoid=" + Location + "&uid=" + UserId + GetSystemInfo());
 			HttpRequest->SetVerb("GET");
 			HttpRequest->ProcessRequest();
 #endif
@@ -613,7 +600,7 @@ void FAnalyticsProviderGoogleAnalytics::RecordSocialInteraction(const FString& N
 			AndroidThunkCpp_GoogleAnalyticsRecordSocialInteraction(Network, Action, Target);
 #else
 			TSharedRef<IHttpRequest> HttpRequest = FHttpModule::Get().CreateRequest();
-			HttpRequest->SetURL("https://www.google-analytics.com/collect?v=1&t=social&tid=" + ApiTrackingId + "&cid=" + UniversalCid + "&geoid=" + Location + "&uid=" + UserId + "&sn=" + EncodeStringsForHTML(Network) + "&sa=" + EncodeStringsForHTML(Action) + "&st=" + EncodeStringsForHTML(Target) + GetSystemInfo());
+			HttpRequest->SetURL("https://www.google-analytics.com/collect?v=1&t=social&tid=" + ApiTrackingId + "&cid=" + UniversalCid + "&geoid=" + Location + "&uid=" + UserId + "&sn=" + FGenericPlatformHttp::UrlEncode(Network) + "&sa=" + FGenericPlatformHttp::UrlEncode(Action) + "&st=" + FGenericPlatformHttp::UrlEncode(Target) + GetSystemInfo());
 			HttpRequest->SetVerb("GET");
 			HttpRequest->ProcessRequest();
 #endif
@@ -642,7 +629,7 @@ void FAnalyticsProviderGoogleAnalytics::RecordUserTiming(const FString& Category
 			AndroidThunkCpp_GoogleAnalyticsRecordUserTiming(Category, Value, Name);
 #else
 			TSharedRef<IHttpRequest> HttpRequest = FHttpModule::Get().CreateRequest();
-			HttpRequest->SetURL("https://www.google-analytics.com/collect?v=1&t=timing&tid=" + ApiTrackingId + "&cid=" + UniversalCid + "&geoid=" + Location + "&uid=" + UserId + "&utc=" + EncodeStringsForHTML(Category) + "&utv=" + EncodeStringsForHTML(Name) + "&utt=" + FString::FromInt(Value) + GetSystemInfo());
+			HttpRequest->SetURL("https://www.google-analytics.com/collect?v=1&t=timing&tid=" + ApiTrackingId + "&cid=" + UniversalCid + "&geoid=" + Location + "&uid=" + UserId + "&utc=" + FGenericPlatformHttp::UrlEncode(Category) + "&utv=" + FGenericPlatformHttp::UrlEncode(Name) + "&utt=" + FString::FromInt(Value) + GetSystemInfo());
 			HttpRequest->SetVerb("GET");
 			HttpRequest->ProcessRequest();
 #endif
