@@ -10,7 +10,7 @@ namespace UnrealBuildTool.Rules
 	{
 		public GoogleAnalytics(TargetInfo Target)
 		{
-			PrivateDependencyModuleNames.AddRange(new string[] { "Analytics" });
+			PrivateDependencyModuleNames.AddRange(new string[] { "Analytics", "HTTP", "Json" });
 			PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine" });
 			PublicIncludePathModuleNames.Add("Analytics");
 
@@ -57,7 +57,6 @@ namespace UnrealBuildTool.Rules
 			else
 			{
 				bHasGoogleAnalyticsSDK = true;
-				PublicDependencyModuleNames.AddRange(new string[] { "HTTP", "Json" });
 			}
 
 			if (bHasGoogleAnalyticsSDK)
