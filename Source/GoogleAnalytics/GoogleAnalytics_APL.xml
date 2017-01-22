@@ -2,7 +2,7 @@
 <!-- 
     Google Analytics Provider
     Created by Patryk Stepniewski
-    Copyright (c) 2014-2016 gameDNA studio. All Rights Reserved.
+    Copyright (c) 2014-2017 gameDNA studio. All Rights Reserved.
 -->
 <root xmlns:android="http://schemas.android.com/apk/res/android">
   <!-- init section is always evaluated once per architecture -->
