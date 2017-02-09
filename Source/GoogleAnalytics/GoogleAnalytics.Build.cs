@@ -51,7 +51,7 @@ namespace UnrealBuildTool.Rules
 				bHasGoogleAnalyticsSDK = true;
 				PrivateDependencyModuleNames.AddRange(new string[] { "Launch" });
 				string PluginPath = Utils.MakePathRelativeTo(ModuleDirectory, BuildConfiguration.RelativeEnginePath);
-				AdditionalPropertiesForReceipt.Add(new ReceiptProperty("AndroidPlugin", Path.Combine(PluginPath, "GoogleAnalytics_APL.xml")));
+				AdditionalPropertiesForReceipt.Add(new ReceiptProperty("AndroidPlugin", Path.Combine(PluginPath, "GoogleAnalytics_UPL_Android.xml")));
 			}
 			// Other platforms
 			else
