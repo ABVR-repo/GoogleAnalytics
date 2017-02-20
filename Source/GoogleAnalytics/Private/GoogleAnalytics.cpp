@@ -2,6 +2,7 @@
 // Created by Patryk Stepniewski
 // Copyright (c) 2014-2017 gameDNA. All Rights Reserved.
 
+#include "GoogleAnalytics.h"
 #include "GoogleAnalyticsPrivatePCH.h"
 #include "Runtime/Core/Public/Misc/SecureHash.h"
 #include "Runtime/Online/HTTP/Public/PlatformHttp.h"
