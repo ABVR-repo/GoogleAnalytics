@@ -10,6 +10,8 @@ namespace UnrealBuildTool.Rules
 	{
 		public GoogleAnalytics(TargetInfo Target)
 		{
+			PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
+
 			PrivateDependencyModuleNames.AddRange(new string[] { "Analytics", "HTTP", "Json" });
 			PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine" });
 			PublicIncludePathModuleNames.Add("Analytics");

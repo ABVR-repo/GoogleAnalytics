@@ -6,6 +6,7 @@
 
 #include "Runtime/Analytics/Analytics/Public/Interfaces/IAnalyticsProviderModule.h"
 #include "Core.h"
+#include "Runtime/Core/Public/Modules/ModuleManager.h"
 
 class IAnalyticsProvider;
 
