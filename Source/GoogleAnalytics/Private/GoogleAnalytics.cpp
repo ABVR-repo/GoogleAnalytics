@@ -3,9 +3,14 @@
 // Copyright (c) 2014-2017 gameDNA. All Rights Reserved.
 
 #include "GoogleAnalytics.h"
-#include "GoogleAnalyticsPrivatePCH.h"
+#include "GoogleAnalyticsProvider.h"
 #include "Runtime/Core/Public/Misc/SecureHash.h"
 #include "Runtime/Online/HTTP/Public/PlatformHttp.h"
+#include "IAnalyticsProviderModule.h"
+#include "IAnalyticsProvider.h"
+#include "Analytics.h"
+#include "Engine.h"
+#include "Core.h"
 #include <string>
 
 #if PLATFORM_IOS
@@ -30,6 +35,75 @@ IMPLEMENT_MODULE(FAnalyticsGoogleAnalytics, GoogleAnalytics)
 
 TSharedPtr<IAnalyticsProvider> FAnalyticsProviderGoogleAnalytics::Provider;
 
+#if PLATFORM_ANDROID
+jintArray BuildCustomDimensionsIndexArray(const TArray<FCustomDimension>& CustomDimensions)
+{
+	if (JNIEnv* Env = FAndroidApplication::GetJavaEnv())
+	{
+		jintArray CustomDimensionIndex = (jintArray)Env->NewIntArray(CustomDimensions.Num());
+		jint* CustomDimensionIndexElements = Env->GetIntArrayElements(CustomDimensionIndex, 0);
+		for (uint32 Param = 0; Param < CustomDimensions.Num(); Param++)
+		{
+			CustomDimensionIndexElements[Param] = CustomDimensions[Param].Index;
+		}
+		Env->ReleaseIntArrayElements(CustomDimensionIndex, CustomDimensionIndexElements, 0);
+		return CustomDimensionIndex;
+	}
+
+	return NULL;
+}
+
+jobjectArray BuildCustomDimensionsValueArray(const TArray<FCustomDimension>& CustomDimensions)
+{
+	if (JNIEnv* Env = FAndroidApplication::GetJavaEnv())
+	{
+		jobjectArray CustomDimensionValue = (jobjectArray)Env->NewObjectArray(CustomDimensions.Num(), FJavaWrapper::JavaStringClass, NULL);
+		for (uint32 Param = 0; Param < CustomDimensions.Num(); Param++)
+		{
+			jstring StringValue = Env->NewStringUTF(TCHAR_TO_UTF8(*CustomDimensions[Param].Value));
+			Env->SetObjectArrayElement(CustomDimensionValue, Param, StringValue);
+			Env->DeleteLocalRef(StringValue);
+		}
+		return CustomDimensionValue;
+	}
+
+	return NULL;
+}
+
+jintArray BuildCustomMetricsIndexArray(const TArray<FCustomMetric>& CustomMetrics)
+{
+	if (JNIEnv* Env = FAndroidApplication::GetJavaEnv())
+	{
+		jintArray CustomMetricIndex = (jintArray)Env->NewIntArray(CustomMetrics.Num());
+		jint* CustomMetricIndexElements = Env->GetIntArrayElements(CustomMetricIndex, 0);
+		for (uint32 Param = 0; Param < CustomMetrics.Num(); Param++)
+		{
+			CustomMetricIndexElements[Param] = CustomMetrics[Param].Index;
+		}
+		Env->ReleaseIntArrayElements(CustomMetricIndex, CustomMetricIndexElements, 0);
+		return CustomMetricIndex;
+	}
+
+	return NULL;
+}
+
+jfloatArray BuildCustomMetricsValueArray(const TArray<FCustomMetric>& CustomMetrics)
+{
+	if (JNIEnv* Env = FAndroidApplication::GetJavaEnv())
+	{
+		jfloatArray CustomMetricValue = (jfloatArray)Env->NewFloatArray(CustomMetrics.Num());
+		jfloat* CustomMetricValueElements = Env->GetFloatArrayElements(CustomMetricValue, 0);
+		for (uint32 Param = 0; Param < CustomMetrics.Num(); Param++)
+		{
+			CustomMetricValueElements[Param] = CustomMetrics[Param].Value;
+		}
+		Env->ReleaseFloatArrayElements(CustomMetricValue, CustomMetricValueElements, 0);
+		return CustomMetricValue;
+	}
+
+	return NULL;
+}
+#endif
 
 #if PLATFORM_ANDROID
 void AndroidThunkCpp_GoogleAnalyticsStartSession(FString& TrackingId, int32& DispatchInterval)
@@ -43,29 +117,49 @@ void AndroidThunkCpp_GoogleAnalyticsStartSession(FString& TrackingId, int32& Dis
 	}
 }
 
-void AndroidThunkCpp_GoogleAnalyticsRecordScreen(const FString& ScreenName)
+void AndroidThunkCpp_GoogleAnalyticsRecordScreen(const FString& ScreenName, const TArray<FCustomDimension>& CustomDimensions, const TArray<FCustomMetric>& CustomMetrics)
 {
 	if (JNIEnv* Env = FAndroidApplication::GetJavaEnv())
 	{
+		jintArray CustomDimensionIndex = BuildCustomDimensionsIndexArray(CustomDimensions);
+		jobjectArray CustomDimensionValue = BuildCustomDimensionsValueArray(CustomDimensions);
+		jintArray CustomMetricIndex = BuildCustomMetricsIndexArray(CustomMetrics);
+		jfloatArray CustomMetricValue = BuildCustomMetricsValueArray(CustomMetrics);
+
 		jstring ScreenNameFinal = Env->NewStringUTF(TCHAR_TO_UTF8(*ScreenName));
-		static jmethodID Method = FJavaWrapper::FindMethod(Env, FJavaWrapper::GameActivityClassID, "AndroidThunkJava_GoogleAnalyticsRecordScreen", "(Ljava/lang/String;)V", false);
-		FJavaWrapper::CallVoidMethod(Env, FJavaWrapper::GameActivityThis, Method, ScreenNameFinal);
+		static jmethodID Method = FJavaWrapper::FindMethod(Env, FJavaWrapper::GameActivityClassID, "AndroidThunkJava_GoogleAnalyticsRecordScreen", "(Ljava/lang/String;[I[Ljava/lang/String;[I[F)V", false);
+		FJavaWrapper::CallVoidMethod(Env, FJavaWrapper::GameActivityThis, Method, ScreenNameFinal, CustomDimensionIndex, CustomDimensionValue, CustomMetricIndex, CustomMetricValue);
 		Env->DeleteLocalRef(ScreenNameFinal);
+
+		Env->DeleteLocalRef(CustomDimensionIndex);
+		Env->DeleteLocalRef(CustomDimensionValue);
+		Env->DeleteLocalRef(CustomMetricIndex);
+		Env->DeleteLocalRef(CustomMetricValue);
 	}
 }
 
-void AndroidThunkCpp_GoogleAnalyticsRecordEvent(const FString& Category, const FString& Action, const FString& Label, const int32& Value)
+void AndroidThunkCpp_GoogleAnalyticsRecordEvent(const FString& Category, const FString& Action, const FString& Label, const int32& Value, const TArray<FCustomDimension>& CustomDimensions, const TArray<FCustomMetric>& CustomMetrics)
 {
 	if (JNIEnv* Env = FAndroidApplication::GetJavaEnv())
 	{
+		jintArray CustomDimensionIndex = BuildCustomDimensionsIndexArray(CustomDimensions);
+		jobjectArray CustomDimensionValue = BuildCustomDimensionsValueArray(CustomDimensions);
+		jintArray CustomMetricIndex = BuildCustomMetricsIndexArray(CustomMetrics);
+		jfloatArray CustomMetricValue = BuildCustomMetricsValueArray(CustomMetrics);
+
 		jstring CategoryFinal = Env->NewStringUTF(TCHAR_TO_UTF8(*Category));
 		jstring ActionFinal = Env->NewStringUTF(TCHAR_TO_UTF8(*Action));
 		jstring LabelFinal = Env->NewStringUTF(TCHAR_TO_UTF8(*Label));
-		static jmethodID Method = FJavaWrapper::FindMethod(Env, FJavaWrapper::GameActivityClassID, "AndroidThunkJava_GoogleAnalyticsRecordEvent", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;I)V", false);
-		FJavaWrapper::CallVoidMethod(Env, FJavaWrapper::GameActivityThis, Method, CategoryFinal, ActionFinal, LabelFinal, Value);
+		static jmethodID Method = FJavaWrapper::FindMethod(Env, FJavaWrapper::GameActivityClassID, "AndroidThunkJava_GoogleAnalyticsRecordEvent", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;I[I[Ljava/lang/String;[I[F)V", false);
+		FJavaWrapper::CallVoidMethod(Env, FJavaWrapper::GameActivityThis, Method, CategoryFinal, ActionFinal, LabelFinal, Value, CustomDimensionIndex, CustomDimensionValue, CustomMetricIndex, CustomMetricValue);
 		Env->DeleteLocalRef(CategoryFinal);
 		Env->DeleteLocalRef(ActionFinal);
 		Env->DeleteLocalRef(LabelFinal);
+
+		Env->DeleteLocalRef(CustomDimensionIndex);
+		Env->DeleteLocalRef(CustomDimensionValue);
+		Env->DeleteLocalRef(CustomMetricIndex);
+		Env->DeleteLocalRef(CustomMetricValue);
 	}
 }
 
@@ -112,57 +206,97 @@ void AndroidThunkCpp_GoogleAnalyticsSetLocation(const FString& Location) {
 	}
 }
 
-void AndroidThunkCpp_GoogleAnalyticsRecordError(const FString& Description) {
+void AndroidThunkCpp_GoogleAnalyticsRecordError(const FString& Description, const TArray<FCustomDimension>& CustomDimensions, const TArray<FCustomMetric>& CustomMetrics) {
 	if (JNIEnv* Env = FAndroidApplication::GetJavaEnv())
 	{
+		jintArray CustomDimensionIndex = BuildCustomDimensionsIndexArray(CustomDimensions);
+		jobjectArray CustomDimensionValue = BuildCustomDimensionsValueArray(CustomDimensions);
+		jintArray CustomMetricIndex = BuildCustomMetricsIndexArray(CustomMetrics);
+		jfloatArray CustomMetricValue = BuildCustomMetricsValueArray(CustomMetrics);
+
 		jstring DescriptionFinal = Env->NewStringUTF(TCHAR_TO_UTF8(*Description));
-		static jmethodID Method = FJavaWrapper::FindMethod(Env, FJavaWrapper::GameActivityClassID, "AndroidThunkJava_GoogleAnalyticsRecordError", "(Ljava/lang/String;)V", false);
-		FJavaWrapper::CallVoidMethod(Env, FJavaWrapper::GameActivityThis, Method, DescriptionFinal);
+		static jmethodID Method = FJavaWrapper::FindMethod(Env, FJavaWrapper::GameActivityClassID, "AndroidThunkJava_GoogleAnalyticsRecordError", "(Ljava/lang/String;[I[Ljava/lang/String;[I[F)V", false);
+		FJavaWrapper::CallVoidMethod(Env, FJavaWrapper::GameActivityThis, Method, DescriptionFinal, CustomDimensionIndex, CustomDimensionValue, CustomMetricIndex, CustomMetricValue);
 		Env->DeleteLocalRef(DescriptionFinal);
+
+		Env->DeleteLocalRef(CustomDimensionIndex);
+		Env->DeleteLocalRef(CustomDimensionValue);
+		Env->DeleteLocalRef(CustomMetricIndex);
+		Env->DeleteLocalRef(CustomMetricValue);
 	}
 }
 
-void AndroidThunkCpp_GoogleAnalyticsRecordCurrencyPurchase(const FString& TransactionId, const FString& GameCurrencyType, const int32& GameCurrencyAmount, const FString& RealCurrencyType, const float& RealMoneyCost, const FString& PaymentProvider) {
+void AndroidThunkCpp_GoogleAnalyticsRecordCurrencyPurchase(const FString& TransactionId, const FString& GameCurrencyType, const int32& GameCurrencyAmount, const FString& RealCurrencyType, const float& RealMoneyCost, const FString& PaymentProvider, const TArray<FCustomDimension>& CustomDimensions, const TArray<FCustomMetric>& CustomMetrics) {
 	if (JNIEnv* Env = FAndroidApplication::GetJavaEnv())
 	{
+		jintArray CustomDimensionIndex = BuildCustomDimensionsIndexArray(CustomDimensions);
+		jobjectArray CustomDimensionValue = BuildCustomDimensionsValueArray(CustomDimensions);
+		jintArray CustomMetricIndex = BuildCustomMetricsIndexArray(CustomMetrics);
+		jfloatArray CustomMetricValue = BuildCustomMetricsValueArray(CustomMetrics);
+
 		jstring TransactionIdFinal = Env->NewStringUTF(TCHAR_TO_UTF8(*TransactionId));
 		jstring GameCurrencyTypeFinal = Env->NewStringUTF(TCHAR_TO_UTF8(*GameCurrencyType));
 		jstring RealCurrencyTypeFinal = Env->NewStringUTF(TCHAR_TO_UTF8(*RealCurrencyType));
 		jstring PaymentProviderFinal = Env->NewStringUTF(TCHAR_TO_UTF8(*PaymentProvider));
-		static jmethodID Method = FJavaWrapper::FindMethod(Env, FJavaWrapper::GameActivityClassID, "AndroidThunkJava_GoogleAnalyticsRecordCurrencyPurchase", "(Ljava/lang/String;Ljava/lang/String;ILjava/lang/String;FLjava/lang/String;)V", false);
-		FJavaWrapper::CallVoidMethod(Env, FJavaWrapper::GameActivityThis, Method, TransactionIdFinal, GameCurrencyTypeFinal, GameCurrencyAmount, RealCurrencyTypeFinal, RealMoneyCost, PaymentProviderFinal);
+		static jmethodID Method = FJavaWrapper::FindMethod(Env, FJavaWrapper::GameActivityClassID, "AndroidThunkJava_GoogleAnalyticsRecordCurrencyPurchase", "(Ljava/lang/String;Ljava/lang/String;ILjava/lang/String;FLjava/lang/String;[I[Ljava/lang/String;[I[F)V", false);
+		FJavaWrapper::CallVoidMethod(Env, FJavaWrapper::GameActivityThis, Method, TransactionIdFinal, GameCurrencyTypeFinal, GameCurrencyAmount, RealCurrencyTypeFinal, RealMoneyCost, PaymentProviderFinal, CustomDimensionIndex, CustomDimensionValue, CustomMetricIndex, CustomMetricValue);
 		Env->DeleteLocalRef(TransactionIdFinal);
 		Env->DeleteLocalRef(GameCurrencyTypeFinal);
 		Env->DeleteLocalRef(RealCurrencyTypeFinal);
 		Env->DeleteLocalRef(PaymentProviderFinal);
+
+		Env->DeleteLocalRef(CustomDimensionIndex);
+		Env->DeleteLocalRef(CustomDimensionValue);
+		Env->DeleteLocalRef(CustomMetricIndex);
+		Env->DeleteLocalRef(CustomMetricValue);
 	}
 }
 
-void AndroidThunkCpp_GoogleAnalyticsRecordSocialInteraction(const FString& Network, const FString& Action, const FString& Target)
+void AndroidThunkCpp_GoogleAnalyticsRecordSocialInteraction(const FString& Network, const FString& Action, const FString& Target, const TArray<FCustomDimension>& CustomDimensions, const TArray<FCustomMetric>& CustomMetrics)
 {
 	if (JNIEnv* Env = FAndroidApplication::GetJavaEnv())
 	{
+		jintArray CustomDimensionIndex = BuildCustomDimensionsIndexArray(CustomDimensions);
+		jobjectArray CustomDimensionValue = BuildCustomDimensionsValueArray(CustomDimensions);
+		jintArray CustomMetricIndex = BuildCustomMetricsIndexArray(CustomMetrics);
+		jfloatArray CustomMetricValue = BuildCustomMetricsValueArray(CustomMetrics);
+
 		jstring NetworkFinal = Env->NewStringUTF(TCHAR_TO_UTF8(*Network));
 		jstring ActionFinal = Env->NewStringUTF(TCHAR_TO_UTF8(*Action));
 		jstring TargetFinal = Env->NewStringUTF(TCHAR_TO_UTF8(*Target));
-		static jmethodID Method = FJavaWrapper::FindMethod(Env, FJavaWrapper::GameActivityClassID, "AndroidThunkJava_GoogleAnalyticsRecordSocialInteraction", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V", false);
-		FJavaWrapper::CallVoidMethod(Env, FJavaWrapper::GameActivityThis, Method, NetworkFinal, ActionFinal, TargetFinal);
+		static jmethodID Method = FJavaWrapper::FindMethod(Env, FJavaWrapper::GameActivityClassID, "AndroidThunkJava_GoogleAnalyticsRecordSocialInteraction", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;[I[Ljava/lang/String;[I[F)V", false);
+		FJavaWrapper::CallVoidMethod(Env, FJavaWrapper::GameActivityThis, Method, NetworkFinal, ActionFinal, TargetFinal, CustomDimensionIndex, CustomDimensionValue, CustomMetricIndex, CustomMetricValue);
 		Env->DeleteLocalRef(NetworkFinal);
 		Env->DeleteLocalRef(ActionFinal);
 		Env->DeleteLocalRef(TargetFinal);
+
+		Env->DeleteLocalRef(CustomDimensionIndex);
+		Env->DeleteLocalRef(CustomDimensionValue);
+		Env->DeleteLocalRef(CustomMetricIndex);
+		Env->DeleteLocalRef(CustomMetricValue);
 	}
 }
 
-void AndroidThunkCpp_GoogleAnalyticsRecordUserTiming(const FString& Category, const int32& Value, const FString& Name)
+void AndroidThunkCpp_GoogleAnalyticsRecordUserTiming(const FString& Category, const int32& Value, const FString& Name, const TArray<FCustomDimension>& CustomDimensions, const TArray<FCustomMetric>& CustomMetrics)
 {
 	if (JNIEnv* Env = FAndroidApplication::GetJavaEnv())
 	{
+		jintArray CustomDimensionIndex = BuildCustomDimensionsIndexArray(CustomDimensions);
+		jobjectArray CustomDimensionValue = BuildCustomDimensionsValueArray(CustomDimensions);
+		jintArray CustomMetricIndex = BuildCustomMetricsIndexArray(CustomMetrics);
+		jfloatArray CustomMetricValue = BuildCustomMetricsValueArray(CustomMetrics);
+
 		jstring CategoryFinal = Env->NewStringUTF(TCHAR_TO_UTF8(*Category));
 		jstring NameFinal = Env->NewStringUTF(TCHAR_TO_UTF8(*Name));
-		static jmethodID Method = FJavaWrapper::FindMethod(Env, FJavaWrapper::GameActivityClassID, "AndroidThunkJava_GoogleAnalyticsRecordUserTiming", "(Ljava/lang/String;ILjava/lang/String;)V", false);
-		FJavaWrapper::CallVoidMethod(Env, FJavaWrapper::GameActivityThis, Method, CategoryFinal, Value, NameFinal);
+		static jmethodID Method = FJavaWrapper::FindMethod(Env, FJavaWrapper::GameActivityClassID, "AndroidThunkJava_GoogleAnalyticsRecordUserTiming", "(Ljava/lang/String;ILjava/lang/String;[I[Ljava/lang/String;[I[F)V", false);
+		FJavaWrapper::CallVoidMethod(Env, FJavaWrapper::GameActivityThis, Method, CategoryFinal, Value, NameFinal, CustomDimensionIndex, CustomDimensionValue, CustomMetricIndex, CustomMetricValue);
 		Env->DeleteLocalRef(CategoryFinal);
 		Env->DeleteLocalRef(NameFinal);
+
+		Env->DeleteLocalRef(CustomDimensionIndex);
+		Env->DeleteLocalRef(CustomDimensionValue);
+		Env->DeleteLocalRef(CustomMetricIndex);
+		Env->DeleteLocalRef(CustomMetricValue);
 	}
 }
 
@@ -522,6 +656,9 @@ void FAnalyticsProviderGoogleAnalytics::RecordEvent(const FString& EventName, co
 				}
 			}
 
+			const TArray<FCustomDimension> CustomDimensions = BuildCustomDimensionsFromAttributes(Attributes);
+			const TArray<FCustomMetric> CustomMetrics = BuildCustomMetricsFromAttributes(Attributes);
+
 #if PLATFORM_IOS
 #if WITH_GOOGLEANALYTICS
 			NSString* EventLabel = Label.Len() > 0 ? Label.GetNSString() : nil;
@@ -529,6 +666,8 @@ void FAnalyticsProviderGoogleAnalytics::RecordEvent(const FString& EventName, co
 
 			if (tracker != nil)
 			{
+				tracker = BuildCustomDimensionsAndMetrics(tracker, CustomDimensions, CustomMetrics);
+
 				[tracker send : [[GAIDictionaryBuilder createEventWithCategory : Category.GetNSString()
 					action : EventName.GetNSString()
 					label : EventLabel
@@ -538,10 +677,10 @@ void FAnalyticsProviderGoogleAnalytics::RecordEvent(const FString& EventName, co
 			UE_LOG(LogAnalytics, Warning, TEXT("WITH_GOOGLEANALYTICS=0. Are you missing the SDK?"));
 #endif
 #elif PLATFORM_ANDROID
-			AndroidThunkCpp_GoogleAnalyticsRecordEvent(Category, EventName, Label, Value);
-#else 
+			AndroidThunkCpp_GoogleAnalyticsRecordEvent(Category, EventName, Label, Value, CustomDimensions, CustomMetrics);
+#else
 			TSharedRef<IHttpRequest> HttpRequest = FHttpModule::Get().CreateRequest();
-			HttpRequest->SetURL("https://www.google-analytics.com/collect?v=1&t=event&tid=" + ApiTrackingId + "&cid=" + UniversalCid + "&ec=" + FPlatformHttp::UrlEncode(Category) + "&ea=" + FPlatformHttp::UrlEncode(Action) + "&el=" + FPlatformHttp::UrlEncode(Label) + "&ev=" + FString::FromInt(Value) + "&geoid=" + Location + "&uid=" + UserId + GetSystemInfo());
+			HttpRequest->SetURL("https://www.google-analytics.com/collect?v=1&t=event&tid=" + ApiTrackingId + "&cid=" + UniversalCid + "&ec=" + FPlatformHttp::UrlEncode(Category) + "&ea=" + FPlatformHttp::UrlEncode(Action) + "&el=" + FPlatformHttp::UrlEncode(Label) + "&ev=" + FString::FromInt(Value) + "&geoid=" + Location + "&uid=" + UserId + BuildCustomDimensions(CustomDimensions) + BuildCustomMetrics(CustomMetrics) + GetSystemInfo());
 			HttpRequest->SetVerb("GET");
 			HttpRequest->ProcessRequest();
 #endif
@@ -549,7 +688,7 @@ void FAnalyticsProviderGoogleAnalytics::RecordEvent(const FString& EventName, co
 	}
 }
 
-void FAnalyticsProviderGoogleAnalytics::RecordScreen(const FString& ScreenName)
+void FAnalyticsProviderGoogleAnalytics::RecordScreen(const FString& ScreenName, const TArray<FCustomDimension> CustomDimensions, const TArray<FCustomMetric> CustomMetrics)
 {
 	if (bHasSessionStarted)
 	{
@@ -561,6 +700,7 @@ void FAnalyticsProviderGoogleAnalytics::RecordScreen(const FString& ScreenName)
 
 			if (tracker != nil)
 			{
+				tracker = BuildCustomDimensionsAndMetrics(tracker, CustomDimensions, CustomMetrics);
 				[tracker set : kGAIScreenName value : ScreenName.GetNSString()];
 				[tracker send : [[GAIDictionaryBuilder createScreenView] build]];
 			}
@@ -568,10 +708,10 @@ void FAnalyticsProviderGoogleAnalytics::RecordScreen(const FString& ScreenName)
 			UE_LOG(LogAnalytics, Warning, TEXT("WITH_GOOGLEANALYTICS=0. Are you missing the SDK?"));
 #endif
 #elif PLATFORM_ANDROID
-			AndroidThunkCpp_GoogleAnalyticsRecordScreen(ScreenName);
+			AndroidThunkCpp_GoogleAnalyticsRecordScreen(ScreenName, CustomDimensions, CustomMetrics);
 #else
 			TSharedRef<IHttpRequest> HttpRequest = FHttpModule::Get().CreateRequest();
-			HttpRequest->SetURL("https://www.google-analytics.com/collect?v=1&t=pageview&tid=" + ApiTrackingId + "&cid=" + UniversalCid + "&dp=" + FPlatformHttp::UrlEncode(ScreenName) + "&geoid=" + Location + "&uid=" + UserId + GetSystemInfo());
+			HttpRequest->SetURL("https://www.google-analytics.com/collect?v=1&t=pageview&tid=" + ApiTrackingId + "&cid=" + UniversalCid + "&dp=" + FPlatformHttp::UrlEncode(ScreenName) + "&geoid=" + Location + "&uid=" + UserId + BuildCustomDimensions(CustomDimensions) + BuildCustomMetrics(CustomMetrics) + GetSystemInfo());
 			HttpRequest->SetVerb("GET");
 			HttpRequest->ProcessRequest();
 #endif
@@ -579,7 +719,7 @@ void FAnalyticsProviderGoogleAnalytics::RecordScreen(const FString& ScreenName)
 	}
 }
 
-void FAnalyticsProviderGoogleAnalytics::RecordSocialInteraction(const FString& Network, const FString& Action, const FString& Target)
+void FAnalyticsProviderGoogleAnalytics::RecordSocialInteraction(const FString& Network, const FString& Action, const FString& Target, const TArray<FCustomDimension> CustomDimensions, const TArray<FCustomMetric> CustomMetrics)
 {
 	if (bHasSessionStarted)
 	{
@@ -591,6 +731,8 @@ void FAnalyticsProviderGoogleAnalytics::RecordSocialInteraction(const FString& N
 
 			if (tracker != nil)
 			{
+				tracker = BuildCustomDimensionsAndMetrics(tracker, CustomDimensions, CustomMetrics);
+
 				NSString* EventTarget = Target.Len() > 0 ? Target.GetNSString() : nil;
 				[tracker send : [[GAIDictionaryBuilder createSocialWithNetwork : Network.GetNSString() action : Action.GetNSString() target : EventTarget] build]];
 			}
@@ -598,10 +740,10 @@ void FAnalyticsProviderGoogleAnalytics::RecordSocialInteraction(const FString& N
 			UE_LOG(LogAnalytics, Warning, TEXT("WITH_GOOGLEANALYTICS=0. Are you missing the SDK?"));
 #endif
 #elif PLATFORM_ANDROID
-			AndroidThunkCpp_GoogleAnalyticsRecordSocialInteraction(Network, Action, Target);
+			AndroidThunkCpp_GoogleAnalyticsRecordSocialInteraction(Network, Action, Target, CustomDimensions, CustomMetrics);
 #else
 			TSharedRef<IHttpRequest> HttpRequest = FHttpModule::Get().CreateRequest();
-			HttpRequest->SetURL("https://www.google-analytics.com/collect?v=1&t=social&tid=" + ApiTrackingId + "&cid=" + UniversalCid + "&geoid=" + Location + "&uid=" + UserId + "&sn=" + FPlatformHttp::UrlEncode(Network) + "&sa=" + FPlatformHttp::UrlEncode(Action) + "&st=" + FPlatformHttp::UrlEncode(Target) + GetSystemInfo());
+			HttpRequest->SetURL("https://www.google-analytics.com/collect?v=1&t=social&tid=" + ApiTrackingId + "&cid=" + UniversalCid + "&geoid=" + Location + "&uid=" + UserId + "&sn=" + FPlatformHttp::UrlEncode(Network) + "&sa=" + FPlatformHttp::UrlEncode(Action) + "&st=" + FPlatformHttp::UrlEncode(Target) + BuildCustomDimensions(CustomDimensions) + BuildCustomMetrics(CustomMetrics) + GetSystemInfo());
 			HttpRequest->SetVerb("GET");
 			HttpRequest->ProcessRequest();
 #endif
@@ -609,7 +751,7 @@ void FAnalyticsProviderGoogleAnalytics::RecordSocialInteraction(const FString& N
 	}
 }
 
-void FAnalyticsProviderGoogleAnalytics::RecordUserTiming(const FString& Category, const int32 Value, const FString& Name)
+void FAnalyticsProviderGoogleAnalytics::RecordUserTiming(const FString& Category, const int32 Value, const FString& Name, const TArray<FCustomDimension> CustomDimensions, const TArray<FCustomMetric> CustomMetrics)
 {
 	if (bHasSessionStarted)
 	{
@@ -621,16 +763,18 @@ void FAnalyticsProviderGoogleAnalytics::RecordUserTiming(const FString& Category
 
 			if (tracker != nil)
 			{
+				tracker = BuildCustomDimensionsAndMetrics(tracker, CustomDimensions, CustomMetrics);
+
 				[tracker send : [[GAIDictionaryBuilder createTimingWithCategory : Category.GetNSString() interval : @((NSUInteger)(Value)) name:Name.GetNSString() label:nil] build]];
 			}
 #else
 			UE_LOG(LogAnalytics, Warning, TEXT("WITH_GOOGLEANALYTICS=0. Are you missing the SDK?"));
 #endif
 #elif PLATFORM_ANDROID
-			AndroidThunkCpp_GoogleAnalyticsRecordUserTiming(Category, Value, Name);
+			AndroidThunkCpp_GoogleAnalyticsRecordUserTiming(Category, Value, Name, CustomDimensions, CustomMetrics);
 #else
 			TSharedRef<IHttpRequest> HttpRequest = FHttpModule::Get().CreateRequest();
-			HttpRequest->SetURL("https://www.google-analytics.com/collect?v=1&t=timing&tid=" + ApiTrackingId + "&cid=" + UniversalCid + "&geoid=" + Location + "&uid=" + UserId + "&utc=" + FPlatformHttp::UrlEncode(Category) + "&utv=" + FPlatformHttp::UrlEncode(Name) + "&utt=" + FString::FromInt(Value) + GetSystemInfo());
+			HttpRequest->SetURL("https://www.google-analytics.com/collect?v=1&t=timing&tid=" + ApiTrackingId + "&cid=" + UniversalCid + "&geoid=" + Location + "&uid=" + UserId + "&utc=" + FPlatformHttp::UrlEncode(Category) + "&utv=" + FPlatformHttp::UrlEncode(Name) + "&utt=" + FString::FromInt(Value) + BuildCustomDimensions(CustomDimensions) + BuildCustomMetrics(CustomMetrics) + GetSystemInfo());
 			HttpRequest->SetVerb("GET");
 			HttpRequest->ProcessRequest();
 #endif
@@ -693,12 +837,17 @@ void FAnalyticsProviderGoogleAnalytics::RecordCurrencyPurchase(const FString& Ga
 
 			FString TransactionId = FMD5::HashAnsiString(*(GameCurrencyType + RealCurrencyType + PaymentProvider + FDateTime::Now().ToString()));
 
+			const TArray<FCustomDimension> CustomDimensions = BuildCustomDimensionsFromAttributes(EventAttrs);
+			const TArray<FCustomMetric> CustomMetrics = BuildCustomMetricsFromAttributes(EventAttrs);
+
 #if PLATFORM_IOS
 #if WITH_GOOGLEANALYTICS
 			id<GAITracker> tracker = [[GAI sharedInstance] defaultTracker];
 
 			if (tracker != nil)
 			{
+				tracker = BuildCustomDimensionsAndMetrics(tracker, CustomDimensions, CustomMetrics);
+
 				[tracker send : [[GAIDictionaryBuilder createTransactionWithId : TransactionId.GetNSString()
 					affiliation : PaymentProvider.GetNSString()
 					revenue : @(RealMoneyCost)
@@ -718,15 +867,15 @@ void FAnalyticsProviderGoogleAnalytics::RecordCurrencyPurchase(const FString& Ga
 			UE_LOG(LogAnalytics, Warning, TEXT("WITH_GOOGLEANALYTICS=0. Are you missing the SDK?"));
 #endif
 #elif PLATFORM_ANDROID
-			AndroidThunkCpp_GoogleAnalyticsRecordCurrencyPurchase(TransactionId, GameCurrencyType, GameCurrencyAmount, RealCurrencyType, RealMoneyCost, PaymentProvider);
+			AndroidThunkCpp_GoogleAnalyticsRecordCurrencyPurchase(TransactionId, GameCurrencyType, GameCurrencyAmount, RealCurrencyType, RealMoneyCost, PaymentProvider, CustomDimensions, CustomMetrics);
 #else
 			TSharedRef<IHttpRequest> HttpRequestTransaction = FHttpModule::Get().CreateRequest();
-			HttpRequestTransaction->SetURL("https://www.google-analytics.com/collect?v=1&t=transaction&tid=" + ApiTrackingId + "&cid=" + UniversalCid + "&geoid=" + Location + "&uid=" + UserId + "&ti=" + TransactionId + "&ta=" + PaymentProvider + "&tr=" + FString::SanitizeFloat(RealMoneyCost) + "&ts=0&tt=0&cu=" + RealCurrencyType + GetSystemInfo());
+			HttpRequestTransaction->SetURL("https://www.google-analytics.com/collect?v=1&t=transaction&tid=" + ApiTrackingId + "&cid=" + UniversalCid + "&geoid=" + Location + "&uid=" + UserId + "&ti=" + TransactionId + "&ta=" + PaymentProvider + "&tr=" + FString::SanitizeFloat(RealMoneyCost) + "&ts=0&tt=0&cu=" + RealCurrencyType + BuildCustomDimensions(CustomDimensions) + BuildCustomMetrics(CustomMetrics) + GetSystemInfo());
 			HttpRequestTransaction->SetVerb("GET");
 			HttpRequestTransaction->ProcessRequest();
 
 			TSharedRef<IHttpRequest> HttpRequestItem = FHttpModule::Get().CreateRequest();
-			HttpRequestItem->SetURL("https://www.google-analytics.com/collect?v=1&t=item&tid=" + ApiTrackingId + "&cid=" + UniversalCid + "&geoid=" + Location + "&uid=" + UserId + "&ti=" + TransactionId + "&in=" + GameCurrencyType + "&ip=" + FString::SanitizeFloat(RealMoneyCost / GameCurrencyAmount) + "&iq=" + FString::FromInt(GameCurrencyAmount) + "&iv=" + PaymentProvider + "&ic=" + GameCurrencyType + "&cu=" + RealCurrencyType + GetSystemInfo());
+			HttpRequestItem->SetURL("https://www.google-analytics.com/collect?v=1&t=item&tid=" + ApiTrackingId + "&cid=" + UniversalCid + "&geoid=" + Location + "&uid=" + UserId + "&ti=" + TransactionId + "&in=" + GameCurrencyType + "&ip=" + FString::SanitizeFloat(RealMoneyCost / GameCurrencyAmount) + "&iq=" + FString::FromInt(GameCurrencyAmount) + "&iv=" + PaymentProvider + "&ic=" + GameCurrencyType + "&cu=" + RealCurrencyType + BuildCustomDimensions(CustomDimensions) + BuildCustomMetrics(CustomMetrics) + GetSystemInfo());
 			HttpRequestItem->SetVerb("GET");
 			HttpRequestItem->ProcessRequest();
 #endif
@@ -751,12 +900,17 @@ void FAnalyticsProviderGoogleAnalytics::RecordError(const FString& Error, const 
 	{
 		if (Error.Len() > 0)
 		{
+			const TArray<FCustomDimension> CustomDimensions = BuildCustomDimensionsFromAttributes(EventAttrs);
+			const TArray<FCustomMetric> CustomMetrics = BuildCustomMetricsFromAttributes(EventAttrs);
+
 #if PLATFORM_IOS
 #if WITH_GOOGLEANALYTICS
 			id<GAITracker> tracker = [[GAI sharedInstance] defaultTracker];
 
 			if (tracker != nil)
 			{
+				tracker = BuildCustomDimensionsAndMetrics(tracker, CustomDimensions, CustomMetrics);
+
 				[tracker send : [[GAIDictionaryBuilder
 					createExceptionWithDescription : Error.GetNSString()
 					withFatal : @NO] build]];
@@ -765,10 +919,10 @@ void FAnalyticsProviderGoogleAnalytics::RecordError(const FString& Error, const 
 			UE_LOG(LogAnalytics, Warning, TEXT("WITH_GOOGLEANALYTICS=0. Are you missing the SDK?"));
 #endif
 #elif PLATFORM_ANDROID
-			AndroidThunkCpp_GoogleAnalyticsRecordError(Error);
+			AndroidThunkCpp_GoogleAnalyticsRecordError(Error, CustomDimensions, CustomMetrics);
 #else
 			TSharedRef<IHttpRequest> HttpRequest = FHttpModule::Get().CreateRequest();
-			HttpRequest->SetURL("https://www.google-analytics.com/collect?v=1&t=exception&tid=" + ApiTrackingId + "&cid=" + UniversalCid + "&geoid=" + Location + "&uid=" + UserId + "&exd=" + Error + "&exf=0" + GetSystemInfo());
+			HttpRequest->SetURL("https://www.google-analytics.com/collect?v=1&t=exception&tid=" + ApiTrackingId + "&cid=" + UniversalCid + "&geoid=" + Location + "&uid=" + UserId + "&exd=" + Error + "&exf=0" + BuildCustomDimensions(CustomDimensions) + BuildCustomMetrics(CustomMetrics) + GetSystemInfo());
 			HttpRequest->SetVerb("GET");
 			HttpRequest->ProcessRequest();
 #endif
@@ -796,4 +950,95 @@ void FAnalyticsProviderGoogleAnalytics::RecordProgress(const FString& ProgressTy
 		Params.Add(FAnalyticsEventAttribute(TEXT("Label"), Hierarchy));
 		RecordEvent(ProgressType, Params);
 	}
+}
+
+#if PLATFORM_IOS && WITH_GOOGLEANALYTICS
+id<GAITracker> FAnalyticsProviderGoogleAnalytics::BuildCustomDimensionsAndMetrics(id<GAITracker> tracker, const TArray<FCustomDimension> CustomDimensions, const TArray<FCustomMetric> CustomMetrics)
+{
+	for (int i = 0; i < CustomDimensions.Num(); i++)
+	{
+		[tracker set : [GAIFields customDimensionForIndex : CustomDimensions[i].Index] value : CustomDimensions[i].Value.GetNSString() ];
+	}
+
+	for (int i = 0; i < CustomMetrics.Num(); i++)
+	{
+		[tracker set : [GAIFields customMetricForIndex : CustomMetrics[i].Index] value : FString::SanitizeFloat(CustomMetrics[i].Value).GetNSString() ];
+	}
+
+	return tracker;
+}
+#endif
+
+FString FAnalyticsProviderGoogleAnalytics::BuildCustomDimensions(const TArray<FCustomDimension> CustomDimensions)
+{
+	FString Result = FString();
+
+	for (auto& CustomDimension : CustomDimensions)
+	{
+		Result += "&cd" + FString::FromInt(CustomDimension.Index) + "=" + CustomDimension.Value;
+	}
+
+	return Result;
+}
+
+FString FAnalyticsProviderGoogleAnalytics::BuildCustomMetrics(const TArray<FCustomMetric> CustomMetrics)
+{
+	FString Result = FString();
+
+	for (auto& CustomMetric : CustomMetrics)
+	{
+		Result += "&cm" + FString::FromInt(CustomMetric.Index) + "=" + FString::SanitizeFloat(CustomMetric.Value);
+	}
+
+	return Result;
+}
+
+const TArray<FCustomDimension> FAnalyticsProviderGoogleAnalytics::BuildCustomDimensionsFromAttributes(const TArray<FAnalyticsEventAttribute>& Attributes)
+{
+	TArray<FCustomDimension> CustomDimensions;
+
+	for (int i = 0; i < Attributes.Num(); i++)
+	{
+		FString AttributeName = Attributes[i].AttrName;
+		if (AttributeName.Contains("CustomDimension") && Attributes[i].AttrValue.Len() > 0)
+		{
+			AttributeName = AttributeName.Replace(*FString("CustomDimension"), *FString(""));
+
+			if (AttributeName.IsNumeric())
+			{
+				FCustomDimension CustomDimension;
+				CustomDimension.Index = FCString::Atoi(*AttributeName);
+				CustomDimension.Value = Attributes[i].AttrValue;
+
+				CustomDimensions.Add(CustomDimension);
+			}
+		}
+	}
+
+	return CustomDimensions;
+}
+
+const TArray<FCustomMetric> FAnalyticsProviderGoogleAnalytics::BuildCustomMetricsFromAttributes(const TArray<FAnalyticsEventAttribute>& Attributes)
+{
+	TArray<FCustomMetric> CustomMetrics;
+
+	for (int i = 0; i < Attributes.Num(); i++)
+	{
+		FString AttributeName = Attributes[i].AttrName;
+		if (AttributeName.Contains("CustomMetric") && Attributes[i].AttrValue.Len() > 0)
+		{
+			AttributeName = AttributeName.Replace(*FString("CustomMetric"), *FString(""));
+
+			if (AttributeName.IsNumeric() && Attributes[i].AttrValue.IsNumeric())
+			{
+				FCustomMetric CustomMetric;
+				CustomMetric.Index = FCString::Atoi(*AttributeName);
+				CustomMetric.Value = FCString::Atof(*Attributes[i].AttrValue);
+
+				CustomMetrics.Add(CustomMetric);
+			}
+		}
+	}
+
+	return CustomMetrics;
 }

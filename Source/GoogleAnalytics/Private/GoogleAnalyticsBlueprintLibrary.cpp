@@ -3,7 +3,6 @@
 // Copyright (c) 2014-2017 gameDNA. All Rights Reserved.
 
 #include "GoogleAnalyticsBlueprintLibrary.h"
-#include "GoogleAnalyticsPrivatePCH.h"
 
 DEFINE_LOG_CATEGORY(LogGoogleAnalytics);
 
@@ -13,17 +12,17 @@ UGoogleAnalyticsBlueprintLibrary::UGoogleAnalyticsBlueprintLibrary(const FObject
 }
 
 /** Record Google Screen */
-void UGoogleAnalyticsBlueprintLibrary::RecordGoogleScreen(const FString& ScreenName)
+void UGoogleAnalyticsBlueprintLibrary::RecordGoogleScreen(const FString& ScreenName, const TArray<FCustomDimension> CustomDimensions, const TArray<FCustomMetric> CustomMetrics)
 {
 	TSharedPtr<FAnalyticsProviderGoogleAnalytics> Provider = FAnalyticsProviderGoogleAnalytics::GetProvider();
 	if (Provider.IsValid())
 	{
-		Provider->RecordScreen(ScreenName);
+		Provider->RecordScreen(ScreenName, CustomDimensions, CustomMetrics);
 	}
 }
 
 /** Record Google Event */
-void UGoogleAnalyticsBlueprintLibrary::RecordGoogleEvent(const FString& EventCategory, const FString& EventAction, const FString& EventLabel, const int32 EventValue)
+void UGoogleAnalyticsBlueprintLibrary::RecordGoogleEvent(const FString& EventCategory, const FString& EventAction, const FString& EventLabel, const int32 EventValue, const TArray<FCustomDimension> CustomDimensions, const TArray<FCustomMetric> CustomMetrics)
 {
 	TSharedPtr<FAnalyticsProviderGoogleAnalytics> Provider = FAnalyticsProviderGoogleAnalytics::GetProvider();
 	if (Provider.IsValid())
@@ -58,21 +57,21 @@ FString UGoogleAnalyticsBlueprintLibrary::GetTrackingId()
 }
 
 /** Record Google Social Interaction */
-void UGoogleAnalyticsBlueprintLibrary::RecordGoogleSocialInteraction(const FString& SocialNetwork, const FString& SocialAction, const FString& SocialTarget)
+void UGoogleAnalyticsBlueprintLibrary::RecordGoogleSocialInteraction(const FString& SocialNetwork, const FString& SocialAction, const FString& SocialTarget, const TArray<FCustomDimension> CustomDimensions, const TArray<FCustomMetric> CustomMetrics)
 {
 	TSharedPtr<FAnalyticsProviderGoogleAnalytics> Provider = FAnalyticsProviderGoogleAnalytics::GetProvider();
 	if (Provider.IsValid())
 	{
-		Provider->RecordSocialInteraction(SocialNetwork, SocialAction, SocialTarget);
+		Provider->RecordSocialInteraction(SocialNetwork, SocialAction, SocialTarget, CustomDimensions, CustomMetrics);
 	}
 }
 
 /** Record Google User Timing */ 
-void UGoogleAnalyticsBlueprintLibrary::RecordGoogleUserTiming(const FString& TimingCategory, const int32 TimingValue, const FString& TimingName)
+void UGoogleAnalyticsBlueprintLibrary::RecordGoogleUserTiming(const FString& TimingCategory, const int32 TimingValue, const FString& TimingName, const TArray<FCustomDimension> CustomDimensions, const TArray<FCustomMetric> CustomMetrics)
 {
 	TSharedPtr<FAnalyticsProviderGoogleAnalytics> Provider = FAnalyticsProviderGoogleAnalytics::GetProvider();
 	if (Provider.IsValid())
 	{
-		Provider->RecordUserTiming(TimingCategory, TimingValue, TimingName);
+		Provider->RecordUserTiming(TimingCategory, TimingValue, TimingName, CustomDimensions, CustomMetrics);
 	}
 }

@@ -96,14 +96,25 @@ com.google.android.gms,play-services-analytics,9.2.0
 		  }
 	  }
 
-	  public void AndroidThunkJava_GoogleAnalyticsRecordScreen(String ScreenName)
+	  public void AndroidThunkJava_GoogleAnalyticsRecordScreen(String ScreenName, int[] CustomDimensionIndex, String[] CustomDimensionValue, int[] CustomMetricIndex, float[] CustomMetricValue)
 	  {
 		  try 
 		  {
 			  if(mTracker != null) 
 			  {
+			      HitBuilders.EventBuilder eventBuilder = new HitBuilders.EventBuilder();
+				  for(int i = 0; i &lt; CustomDimensionIndex.length; i++)
+				  {
+					  eventBuilder.setCustomDimension(CustomDimensionIndex[i], CustomDimensionValue[i]);
+				  }
+				  
+				  for(int i = 0; i &lt; CustomMetricIndex.length; i++)
+				  {
+					  eventBuilder.setCustomMetric(CustomMetricIndex[i], CustomMetricValue[i]);
+				  }
+				  
 				  mTracker.setScreenName(ScreenName);
-				  mTracker.send(new HitBuilders.ScreenViewBuilder().build());
+				  mTracker.send(eventBuilder.build());
 			  }
 		  } 
 		  catch(Exception e) 
@@ -112,13 +123,23 @@ com.google.android.gms,play-services-analytics,9.2.0
 		  }
 	  }
 
-	  public void AndroidThunkJava_GoogleAnalyticsRecordEvent(String Category, String Action, String Label, int Value)
+	  public void AndroidThunkJava_GoogleAnalyticsRecordEvent(String Category, String Action, String Label, int Value, int[] CustomDimensionIndex, String[] CustomDimensionValue, int[] CustomMetricIndex, float[] CustomMetricValue)
 	  {
 		  try 
 		  {
 			  if(mTracker != null) 
 			  {
 				  HitBuilders.EventBuilder eventBuilder = new HitBuilders.EventBuilder();
+				  for(int i = 0; i &lt; CustomDimensionIndex.length; i++)
+				  {
+					  eventBuilder.setCustomDimension(CustomDimensionIndex[i], CustomDimensionValue[i]);
+				  }
+				  
+				  for(int i = 0; i &lt; CustomMetricIndex.length; i++)
+				  {
+					  eventBuilder.setCustomMetric(CustomMetricIndex[i], CustomMetricValue[i]);
+				  }
+				  
 				  eventBuilder.setCategory(Category).setAction(Action);
 				  eventBuilder.setValue(Value);
 
@@ -197,16 +218,27 @@ com.google.android.gms,play-services-analytics,9.2.0
 		  }
 	  }
 
-	  public void AndroidThunkJava_GoogleAnalyticsRecordError(String Description)
+	  public void AndroidThunkJava_GoogleAnalyticsRecordError(String Description, int[] CustomDimensionIndex, String[] CustomDimensionValue, int[] CustomMetricIndex, float[] CustomMetricValue)
 	  {
 		  try 
 		  {
 			  if(mTracker != null) 
 			  {
-				  mTracker.send(new HitBuilders.ExceptionBuilder()
-				  .setDescription(Description)
-				  .setFatal(false)
-				  .build());
+			      HitBuilders.ExceptionBuilder exceptionBuilder = new HitBuilders.ExceptionBuilder();
+				  for(int i = 0; i &lt; CustomDimensionIndex.length; i++)
+				  {
+					  exceptionBuilder.setCustomDimension(CustomDimensionIndex[i], CustomDimensionValue[i]);
+				  }
+				  
+				  for(int i = 0; i &lt; CustomMetricIndex.length; i++)
+				  {
+					  exceptionBuilder.setCustomMetric(CustomMetricIndex[i], CustomMetricValue[i]);
+				  }
+				  
+				  exceptionBuilder.setDescription(Description)
+				                  .setFatal(false);
+				  
+				  mTracker.send(exceptionBuilder.build());
 			  }
 		  } 
 		  catch(Exception e) 
@@ -215,30 +247,44 @@ com.google.android.gms,play-services-analytics,9.2.0
 		  }
 	  }
 
-	  public void AndroidThunkJava_GoogleAnalyticsRecordCurrencyPurchase(String TransactionId, String GameCurrencyType, int GameCurrencyAmount, String RealCurrencyType, float RealMoneyCost, String PaymentProvider)
+	  public void AndroidThunkJava_GoogleAnalyticsRecordCurrencyPurchase(String TransactionId, String GameCurrencyType, int GameCurrencyAmount, String RealCurrencyType, float RealMoneyCost, String PaymentProvider, int[] CustomDimensionIndex, String[] CustomDimensionValue, int[] CustomMetricIndex, float[] CustomMetricValue)
 	  {
 		  try 
 		  {
 			  if(mTracker != null) 
 			  {
-				  mTracker.send(new HitBuilders.TransactionBuilder()
-						  .setTransactionId(TransactionId)
-						  .setAffiliation(PaymentProvider)
-						  .setRevenue(RealMoneyCost)
-						  .setTax(0)
-						  .setShipping(0)
-						  .setCurrencyCode(RealCurrencyType)
-						  .build());
+			      HitBuilders.TransactionBuilder transactionBuilder = new HitBuilders.TransactionBuilder();
+				  HitBuilders.ItemBuilder itemBuilder = new HitBuilders.ItemBuilder();
 
-				  mTracker.send(new HitBuilders.ItemBuilder()
-						  .setTransactionId(TransactionId)
-						  .setName(GameCurrencyType)
-						  .setSku(GameCurrencyType)
-						  .setCategory(PaymentProvider)
-						  .setPrice((RealMoneyCost / GameCurrencyAmount))
-						  .setQuantity(GameCurrencyAmount)
-						  .setCurrencyCode(RealCurrencyType)
-						  .build());
+				  for(int i = 0; i &lt; CustomDimensionIndex.length; i++)
+				  {
+					  transactionBuilder.setCustomDimension(CustomDimensionIndex[i], CustomDimensionValue[i]);
+					  itemBuilder.setCustomDimension(CustomDimensionIndex[i], CustomDimensionValue[i]);
+				  }
+				  
+				  for(int i = 0; i &lt; CustomMetricIndex.length; i++)
+				  {
+					  transactionBuilder.setCustomMetric(CustomMetricIndex[i], CustomMetricValue[i]);
+					  itemBuilder.setCustomMetric(CustomMetricIndex[i], CustomMetricValue[i]);
+				  }
+				  
+				  transactionBuilder.setTransactionId(TransactionId)
+						            .setAffiliation(PaymentProvider)
+						            .setRevenue(RealMoneyCost)
+						            .setTax(0)
+						            .setShipping(0)
+						            .setCurrencyCode(RealCurrencyType);
+				  
+				  itemBuilder.setTransactionId(TransactionId)
+				             .setName(GameCurrencyType)
+				             .setSku(GameCurrencyType)
+				             .setCategory(PaymentProvider)
+				             .setPrice((RealMoneyCost / GameCurrencyAmount))
+				             .setQuantity(GameCurrencyAmount)
+				             .setCurrencyCode(RealCurrencyType);
+							 
+				  mTracker.send(transactionBuilder.build());
+				  mTracker.send(itemBuilder.build());
 			  }
 		  } 
 		  catch(Exception e) 
@@ -247,7 +293,7 @@ com.google.android.gms,play-services-analytics,9.2.0
 		  }
 	  }
 	  
-	  public void AndroidThunkJava_GoogleAnalyticsRecordSocialInteraction(String Network, String Action, String Target)
+	  public void AndroidThunkJava_GoogleAnalyticsRecordSocialInteraction(String Network, String Action, String Target, int[] CustomDimensionIndex, String[] CustomDimensionValue, int[] CustomMetricIndex, float[] CustomMetricValue)
 	  {
 		  try 
 		  {
@@ -256,6 +302,16 @@ com.google.android.gms,play-services-analytics,9.2.0
 				  HitBuilders.SocialBuilder socialBuilder = new HitBuilders.SocialBuilder();
 				  socialBuilder.setNetwork(Network);
 				  socialBuilder.setAction(Action);
+				  
+				  for(int i = 0; i &lt; CustomDimensionIndex.length; i++)
+				  {
+					  socialBuilder.setCustomDimension(CustomDimensionIndex[i], CustomDimensionValue[i]);
+				  }
+				  
+				  for(int i = 0; i &lt; CustomMetricIndex.length; i++)
+				  {
+					  socialBuilder.setCustomMetric(CustomMetricIndex[i], CustomMetricValue[i]);
+				  }
 
 				  if (!Target.equals(""))
 				  {
@@ -271,7 +327,7 @@ com.google.android.gms,play-services-analytics,9.2.0
 		  }
 	  }
 	  
-	  public void AndroidThunkJava_GoogleAnalyticsRecordUserTiming(String Category, int Value, String Name)
+	  public void AndroidThunkJava_GoogleAnalyticsRecordUserTiming(String Category, int Value, String Name, int[] CustomDimensionIndex, String[] CustomDimensionValue, int[] CustomMetricIndex, float[] CustomMetricValue)
 	  {
 		  try 
 		  {
@@ -281,6 +337,16 @@ com.google.android.gms,play-services-analytics,9.2.0
 				  timingBuilder.setCategory(Category);
 				  timingBuilder.setValue(Value);
 				  timingBuilder.setVariable(Name);
+				  
+				  for(int i = 0; i &lt; CustomDimensionIndex.length; i++)
+				  {
+					  timingBuilder.setCustomDimension(CustomDimensionIndex[i], CustomDimensionValue[i]);
+				  }
+				  
+				  for(int i = 0; i &lt; CustomMetricIndex.length; i++)
+				  {
+					  timingBuilder.setCustomMetric(CustomMetricIndex[i], CustomMetricValue[i]);
+				  }
 
 				  mTracker.send(timingBuilder.build());
 			  }

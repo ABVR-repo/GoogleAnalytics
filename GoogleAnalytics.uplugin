@@ -1,7 +1,7 @@
 {
   "FileVersion": 3,
   "Version": 1,
-  "VersionName": "2.1.1",
+  "VersionName": "2.2.0",
   "FriendlyName": "Google Analytics Provider",
   "Description": "Google Analytics Provider for all platforms",
   "Category": "Analytics",
@@ -15,7 +15,7 @@
     {
       "Name": "GoogleAnalytics",
       "Type": "Runtime",
-	  "LoadingPhase": "Default",
+	  "LoadingPhase": "PostConfigInit",
 	  "WhitelistPlatforms": [
         "Win64",
         "Win32",

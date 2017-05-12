@@ -4,9 +4,20 @@
 
 #pragma once
 
+#include "IAnalyticsProviderModule.h"
+#include "IAnalyticsProvider.h"
+#include "Analytics.h"
+#include "GoogleAnalyticsDelegates.h"
+
 #if !PLATFORM_IOS && !PLATFORM_ANDROID
 #include "Http.h" 
 #include "Json.h"
+#endif
+
+#if PLATFORM_IOS && WITH_GOOGLEANALYTICS
+#import "GAI.h"
+#import "GAIFields.h"
+#import "GAIDictionaryBuilder.h"
 #endif
 
 class FAnalyticsProviderGoogleAnalytics :
@@ -61,9 +72,9 @@ public:
 	virtual void SetAge(const int32 InAge) override;
 
 	virtual void RecordEvent(const FString& EventName, const TArray<FAnalyticsEventAttribute>& Attributes) override;
-	void RecordScreen(const FString& ScreenName);
-	void RecordSocialInteraction(const FString& Network, const FString& Action, const FString& Target);
-	void RecordUserTiming(const FString& Category, const int32 Value, const FString& Name);
+	void RecordScreen(const FString& ScreenName, const TArray<FCustomDimension> CustomDimensions = TArray<FCustomDimension>(), const TArray<FCustomMetric> CustomMetrics = TArray<FCustomMetric>());
+	void RecordSocialInteraction(const FString& Network, const FString& Action, const FString& Target, const TArray<FCustomDimension> CustomDimensions = TArray<FCustomDimension>(), const TArray<FCustomMetric> CustomMetrics = TArray<FCustomMetric>());
+	void RecordUserTiming(const FString& Category, const int32 Value, const FString& Name, const TArray<FCustomDimension> CustomDimensions = TArray<FCustomDimension>(), const TArray<FCustomMetric> CustomMetrics = TArray<FCustomMetric>());
 	virtual void RecordItemPurchase(const FString& ItemId, int ItemQuantity, const TArray<FAnalyticsEventAttribute>& EventAttrs) override;
 	virtual void RecordCurrencyPurchase(const FString& GameCurrencyType, int GameCurrencyAmount, const TArray<FAnalyticsEventAttribute>& EventAttrs) override;
 	virtual void RecordCurrencyGiven(const FString& GameCurrencyType, int GameCurrencyAmount, const TArray<FAnalyticsEventAttribute>& EventAttrs) override;
@@ -80,4 +91,14 @@ public:
 
 	void SetOpenUrlHostIOS(const FString& OpenUrlHost);
 	FString GetOpenUrlHostIOS();
+
+#if PLATFORM_IOS && WITH_GOOGLEANALYTICS
+	id<GAITracker> BuildCustomDimensionsAndMetrics(id<GAITracker> tracker, const TArray<FCustomDimension> CustomDimensions, const TArray<FCustomMetric> CustomMetrics);
+#endif
+
+	FString BuildCustomDimensions(const TArray<FCustomDimension> CustomDimensions);
+	FString BuildCustomMetrics(const TArray<FCustomMetric> CustomMetrics);
+
+	const TArray<FCustomDimension> BuildCustomDimensionsFromAttributes(const TArray<FAnalyticsEventAttribute>& Attributes);
+	const TArray<FCustomMetric> BuildCustomMetricsFromAttributes(const TArray<FAnalyticsEventAttribute>& Attributes);
 };
