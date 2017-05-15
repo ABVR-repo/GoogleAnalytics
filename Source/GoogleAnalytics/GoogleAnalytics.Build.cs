@@ -8,7 +8,7 @@ namespace UnrealBuildTool.Rules
 {
 	public class GoogleAnalytics : ModuleRules
 	{
-		public GoogleAnalytics(TargetInfo Target)
+		public GoogleAnalytics(ReadOnlyTargetRules Target) : base(Target)
 		{
 			PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 

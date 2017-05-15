@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Ultimate Mobile Kit plugin additions -->
+<!-- Google Analytics plugin additions -->
 <root xmlns:android="http://schemas.android.com/apk/res/android">
   <init>
 	<log text="GoogleAnalytics init"/>
