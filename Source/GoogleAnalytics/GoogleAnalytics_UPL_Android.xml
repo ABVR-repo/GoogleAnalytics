@@ -12,7 +12,7 @@
 
   <AARImports>
 	<insert>
-com.google.android.gms,play-services-analytics,9.2.0
+com.google.android.gms,play-services-analytics,10.2.1
 	</insert>
 </AARImports>
   
