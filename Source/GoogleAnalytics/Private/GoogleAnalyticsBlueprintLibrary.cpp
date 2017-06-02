@@ -31,6 +31,16 @@ void UGoogleAnalyticsBlueprintLibrary::RecordGoogleEvent(const FString& EventCat
 		Params.Add(FAnalyticsEventAttribute(TEXT("Category"), EventCategory));
 		Params.Add(FAnalyticsEventAttribute(TEXT("Label"), EventLabel));
 		Params.Add(FAnalyticsEventAttribute(TEXT("Value"), EventValue));
+
+		for (int i = 0; i < CustomDimensions.Num(); i++)
+		{
+			Params.Add(FAnalyticsEventAttribute(TEXT("CustomDimension") + FString::FromInt(CustomDimensions[i].Index), CustomDimensions[i].Value));
+		}
+		for (int i = 0; i < CustomMetrics.Num(); i++)
+		{
+			Params.Add(FAnalyticsEventAttribute(TEXT("CustomMetric") + FString::FromInt(CustomMetrics[i].Index), FString::SanitizeFloat(CustomMetrics[i].Value)));
+		}
+
 		Provider->RecordEvent(EventAction, Params);
 	}
 }
