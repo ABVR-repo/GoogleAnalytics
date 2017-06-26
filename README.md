@@ -14,7 +14,7 @@
 * All features are exposed to Blueprints.
 * Works with Blueprint-only & source code projects.
 * Works with Launcher & GitHub UE4 versions.
-* **Supports gameDNA installer. No more downloading SDKs and creating packages on your own!**
+* **Supports gameDNA installer.** No more downloading SDKs and creating packages on your own!
 * Out-of-the-box for all platforms.
 * Real-time sessions tracking (you can see who is currently playing your game!).
 * Tracking events and screens.
