@@ -12,13 +12,13 @@
 
   <AARImports>
 	<insert>
-com.google.android.gms,play-services-base,11.0.0
-com.google.android.gms,play-services-ads,11.0.0
-com.google.android.gms,play-services-analytics,11.0.0
-com.google.android.gms,play-services-auth,11.0.0
-com.google.android.gms,play-services-games,11.0.0
-com.google.android.gms,play-services-nearby,11.0.0
-com.google.android.gms,play-services-plus,11.0.0
+com.google.android.gms,play-services-base,11.0.4
+com.google.android.gms,play-services-ads,11.0.4
+com.google.android.gms,play-services-analytics,11.0.4
+com.google.android.gms,play-services-auth,11.0.4
+com.google.android.gms,play-services-games,11.0.4
+com.google.android.gms,play-services-nearby,11.0.4
+com.google.android.gms,play-services-plus,11.0.4
 com.android.support,appcompat-v7,25.3.1
 com.android.support,recyclerview-v7,25.3.1
 com.android.support,support-v13,25.3.1
