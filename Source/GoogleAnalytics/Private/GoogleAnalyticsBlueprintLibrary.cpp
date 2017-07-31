@@ -4,7 +4,6 @@
 
 #include "GoogleAnalyticsBlueprintLibrary.h"
 
-DEFINE_LOG_CATEGORY(LogGoogleAnalytics);
 
 UGoogleAnalyticsBlueprintLibrary::UGoogleAnalyticsBlueprintLibrary(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)

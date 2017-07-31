@@ -8,8 +8,6 @@
 #include "GoogleAnalyticsDelegates.h"
 #include "GoogleAnalyticsBlueprintLibrary.generated.h"
 
-DECLARE_LOG_CATEGORY_EXTERN(LogGoogleAnalytics, Log, All);
-
 UCLASS()
 class GOOGLEANALYTICS_API UGoogleAnalyticsBlueprintLibrary : public UBlueprintFunctionLibrary
 {

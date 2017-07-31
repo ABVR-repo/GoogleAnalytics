@@ -1,7 +1,7 @@
 {
   "FileVersion": 3,
   "Version": 1,
-  "VersionName": "2.4.2",
+  "VersionName": "2.5.0",
   "FriendlyName": "Google Analytics Provider",
   "Description": "Google Analytics Provider for all platforms",
   "Category": "Analytics",
@@ -9,7 +9,7 @@
   "CreatedByURL": "http://gamednastudio.com",
   "DocsURL": "http://gamednastudio.com/plugins/docs/GoogleAnalytics_UserGuide.pdf",
   "MarketplaceURL": "com.epicgames.launcher://ue/marketplace/content/1b3f6c0fc07648b18758f7b883358b3e",
-  "EngineVersion": "4.16.0",
+  "EngineVersion": "4.17.0",
   "SupportURL": "mailto:support@gamednastudio.com",
   "Modules": [
     {

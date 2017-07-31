@@ -27,7 +27,7 @@
 #endif
 
 
-DEFINE_LOG_CATEGORY_STATIC(LogAnalytics, Display, All);
+DEFINE_LOG_CATEGORY(LogGoogleAnalytics);
 
 #define LOCTEXT_NAMESPACE "GoogleAnalytics"
 
@@ -338,7 +338,7 @@ TSharedPtr<IAnalyticsProvider> FAnalyticsGoogleAnalytics::CreateAnalyticsProvide
 #if WITH_GOOGLEANALYTICS
 		TrackingId = GetConfigValue.Execute(TEXT("TrackingIdIOS"), true);
 #else
-		UE_LOG(LogAnalytics, Warning, TEXT("WITH_GOOGLEANALYTICS=0. Are you missing the SDK?"));
+		UE_LOG(LogGoogleAnalytics, Warning, TEXT("WITH_GOOGLEANALYTICS=0. Are you missing the SDK?"));
 #endif
 #elif PLATFORM_ANDROID
 		TrackingId = GetConfigValue.Execute(TEXT("TrackingIdAndroid"), true);
@@ -350,7 +350,7 @@ TSharedPtr<IAnalyticsProvider> FAnalyticsGoogleAnalytics::CreateAnalyticsProvide
 	}
 	else
 	{
-		UE_LOG(LogAnalytics, Warning, TEXT("GoogleAnalytics::CreateAnalyticsProvider called with an unbound config delegate"));
+		UE_LOG(LogGoogleAnalytics, Warning, TEXT("GoogleAnalytics::CreateAnalyticsProvider called with an unbound config delegate"));
 	}
 	return nullptr;
 }
@@ -403,7 +403,7 @@ bool FAnalyticsProviderGoogleAnalytics::StartSession(const TArray<FAnalyticsEven
 			[tracker send : [[[GAIDictionaryBuilder createScreenView] setAll:hitParamsDict] build]];
 		}
 #else
-		UE_LOG(LogAnalytics, Warning, TEXT("WITH_GOOGLEANALYTICS=0. Are you missing the SDK?"));
+		UE_LOG(LogGoogleAnalytics, Warning, TEXT("WITH_GOOGLEANALYTICS=0. Are you missing the SDK?"));
 #endif
 #elif PLATFORM_ANDROID
 		AndroidThunkCpp_GoogleAnalyticsStartSession(ApiTrackingId, Interval);
@@ -442,7 +442,7 @@ void FAnalyticsProviderGoogleAnalytics::EndSession()
 #if WITH_GOOGLEANALYTICS
 		[[GAI sharedInstance] removeTrackerByName:@"DefaultTracker"];
 #else
-		UE_LOG(LogAnalytics, Warning, TEXT("WITH_GOOGLEANALYTICS=0. Are you missing the SDK?"));
+		UE_LOG(LogGoogleAnalytics, Warning, TEXT("WITH_GOOGLEANALYTICS=0. Are you missing the SDK?"));
 #endif
 #endif
 		bHasSessionStarted = false;
@@ -510,7 +510,7 @@ void FAnalyticsProviderGoogleAnalytics::FlushEvents()
 #if WITH_GOOGLEANALYTICS
 		[[GAI sharedInstance] dispatch];
 #else
-		UE_LOG(LogAnalytics, Warning, TEXT("WITH_GOOGLEANALYTICS=0. Are you missing the SDK?"));
+		UE_LOG(LogGoogleAnalytics, Warning, TEXT("WITH_GOOGLEANALYTICS=0. Are you missing the SDK?"));
 #endif
 #elif PLATFORM_ANDROID
 		AndroidThunkCpp_GoogleAnalyticsFlushEvents();
@@ -531,7 +531,7 @@ void FAnalyticsProviderGoogleAnalytics::SetUserID(const FString& InUserId)
 			[tracker set : kGAIUserId value : InUserId.GetNSString()];
 		}
 #else
-		UE_LOG(LogAnalytics, Warning, TEXT("WITH_GOOGLEANALYTICS=0. Are you missing the SDK?"));
+		UE_LOG(LogGoogleAnalytics, Warning, TEXT("WITH_GOOGLEANALYTICS=0. Are you missing the SDK?"));
 #endif
 #elif PLATFORM_ANDROID
 		AndroidThunkCpp_GoogleAnalyticsSetUserId(InUserId);
@@ -558,7 +558,7 @@ FString FAnalyticsProviderGoogleAnalytics::GetUserID() const
 			return FString();
 		}
 #else
-		UE_LOG(LogAnalytics, Warning, TEXT("WITH_GOOGLEANALYTICS=0. Are you missing the SDK?"));
+		UE_LOG(LogGoogleAnalytics, Warning, TEXT("WITH_GOOGLEANALYTICS=0. Are you missing the SDK?"));
 #endif
 #elif PLATFORM_ANDROID
 		return AndroidThunkCpp_GoogleAnalyticsGetUserId();
@@ -603,7 +603,7 @@ void FAnalyticsProviderGoogleAnalytics::SetLocation(const FString& InLocation)
 			[tracker set : kGAILocation value : InLocation.GetNSString()];
 		}
 #else
-		UE_LOG(LogAnalytics, Warning, TEXT("WITH_GOOGLEANALYTICS=0. Are you missing the SDK?"));
+		UE_LOG(LogGoogleAnalytics, Warning, TEXT("WITH_GOOGLEANALYTICS=0. Are you missing the SDK?"));
 #endif
 #elif PLATFORM_ANDROID
 		AndroidThunkCpp_GoogleAnalyticsSetLocation(InLocation);
@@ -616,7 +616,7 @@ void FAnalyticsProviderGoogleAnalytics::SetLocation(const FString& InLocation)
 FString FAnalyticsProviderGoogleAnalytics::GetSessionID() const
 {
 	// Ignored
-	UE_LOG(LogAnalytics, Display, TEXT("FAnalyticsProviderGoogleAnalytics::GetSessionID - ignoring call"));
+	UE_LOG(LogGoogleAnalytics, Display, TEXT("FAnalyticsProviderGoogleAnalytics::GetSessionID - ignoring call"));
 
 	return FString();
 }
@@ -624,7 +624,7 @@ FString FAnalyticsProviderGoogleAnalytics::GetSessionID() const
 bool FAnalyticsProviderGoogleAnalytics::SetSessionID(const FString& InSessionID)
 {
 	// Ignored
-	UE_LOG(LogAnalytics, Display, TEXT("FAnalyticsProviderGoogleAnalytics::SetSessionID - ignoring call"));
+	UE_LOG(LogGoogleAnalytics, Display, TEXT("FAnalyticsProviderGoogleAnalytics::SetSessionID - ignoring call"));
 
 	return true;
 }
@@ -674,7 +674,7 @@ void FAnalyticsProviderGoogleAnalytics::RecordEvent(const FString& EventName, co
 					value : @(Value)] build]];
 			}
 #else
-			UE_LOG(LogAnalytics, Warning, TEXT("WITH_GOOGLEANALYTICS=0. Are you missing the SDK?"));
+			UE_LOG(LogGoogleAnalytics, Warning, TEXT("WITH_GOOGLEANALYTICS=0. Are you missing the SDK?"));
 #endif
 #elif PLATFORM_ANDROID
 			AndroidThunkCpp_GoogleAnalyticsRecordEvent(Category, EventName, Label, Value, CustomDimensions, CustomMetrics);
@@ -705,7 +705,7 @@ void FAnalyticsProviderGoogleAnalytics::RecordScreen(const FString& ScreenName, 
 				[tracker send : [[GAIDictionaryBuilder createScreenView] build]];
 			}
 #else
-			UE_LOG(LogAnalytics, Warning, TEXT("WITH_GOOGLEANALYTICS=0. Are you missing the SDK?"));
+			UE_LOG(LogGoogleAnalytics, Warning, TEXT("WITH_GOOGLEANALYTICS=0. Are you missing the SDK?"));
 #endif
 #elif PLATFORM_ANDROID
 			AndroidThunkCpp_GoogleAnalyticsRecordScreen(ScreenName, CustomDimensions, CustomMetrics);
@@ -737,7 +737,7 @@ void FAnalyticsProviderGoogleAnalytics::RecordSocialInteraction(const FString& N
 				[tracker send : [[GAIDictionaryBuilder createSocialWithNetwork : Network.GetNSString() action : Action.GetNSString() target : EventTarget] build]];
 			}
 #else
-			UE_LOG(LogAnalytics, Warning, TEXT("WITH_GOOGLEANALYTICS=0. Are you missing the SDK?"));
+			UE_LOG(LogGoogleAnalytics, Warning, TEXT("WITH_GOOGLEANALYTICS=0. Are you missing the SDK?"));
 #endif
 #elif PLATFORM_ANDROID
 			AndroidThunkCpp_GoogleAnalyticsRecordSocialInteraction(Network, Action, Target, CustomDimensions, CustomMetrics);
@@ -768,7 +768,7 @@ void FAnalyticsProviderGoogleAnalytics::RecordUserTiming(const FString& Category
 				[tracker send : [[GAIDictionaryBuilder createTimingWithCategory : Category.GetNSString() interval : @((NSUInteger)(Value)) name:Name.GetNSString() label:nil] build]];
 			}
 #else
-			UE_LOG(LogAnalytics, Warning, TEXT("WITH_GOOGLEANALYTICS=0. Are you missing the SDK?"));
+			UE_LOG(LogGoogleAnalytics, Warning, TEXT("WITH_GOOGLEANALYTICS=0. Are you missing the SDK?"));
 #endif
 #elif PLATFORM_ANDROID
 			AndroidThunkCpp_GoogleAnalyticsRecordUserTiming(Category, Value, Name, CustomDimensions, CustomMetrics);
@@ -864,7 +864,7 @@ void FAnalyticsProviderGoogleAnalytics::RecordCurrencyPurchase(const FString& Ga
 									 currencyCode : RealCurrencyType.GetNSString()] build]];
 			}
 #else
-			UE_LOG(LogAnalytics, Warning, TEXT("WITH_GOOGLEANALYTICS=0. Are you missing the SDK?"));
+			UE_LOG(LogGoogleAnalytics, Warning, TEXT("WITH_GOOGLEANALYTICS=0. Are you missing the SDK?"));
 #endif
 #elif PLATFORM_ANDROID
 			AndroidThunkCpp_GoogleAnalyticsRecordCurrencyPurchase(TransactionId, GameCurrencyType, GameCurrencyAmount, RealCurrencyType, RealMoneyCost, PaymentProvider, CustomDimensions, CustomMetrics);
@@ -916,7 +916,7 @@ void FAnalyticsProviderGoogleAnalytics::RecordError(const FString& Error, const 
 					withFatal : @NO] build]];
 			}
 #else
-			UE_LOG(LogAnalytics, Warning, TEXT("WITH_GOOGLEANALYTICS=0. Are you missing the SDK?"));
+			UE_LOG(LogGoogleAnalytics, Warning, TEXT("WITH_GOOGLEANALYTICS=0. Are you missing the SDK?"));
 #endif
 #elif PLATFORM_ANDROID
 			AndroidThunkCpp_GoogleAnalyticsRecordError(Error, CustomDimensions, CustomMetrics);
