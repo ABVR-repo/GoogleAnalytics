@@ -17,7 +17,6 @@
 		mavenCentral()
 	  }
 	  dependencies {
-		compile 'com.android.support:appcompat-v7:xx.x.x'
 		compile 'com.google.android.gms:play-services-base:11.0.4'
 		compile 'com.google.android.gms:play-services-ads:11.0.4'
 		compile 'com.google.android.gms:play-services-analytics:11.0.4'
