@@ -6,5 +6,6 @@
 
 UGoogleAnalyticsSettings::UGoogleAnalyticsSettings(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
+	, bEnableIDFACollection(false)
 {
 }

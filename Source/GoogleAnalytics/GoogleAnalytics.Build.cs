@@ -3,6 +3,7 @@
 // Copyright (c) 2014-2017 gameDNA. All Rights Reserved.
 
 using System.IO;
+using System.Collections.Generic;
 
 namespace UnrealBuildTool.Rules
 {
@@ -14,6 +15,7 @@ namespace UnrealBuildTool.Rules
 
 			PrivateDependencyModuleNames.AddRange(new string[] { "Analytics", "HTTP", "Json" });
 			PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine" });
+			PrivateIncludePathModuleNames.AddRange(new string[] { "Settings" });
 			PublicIncludePathModuleNames.Add("Analytics");
 
 			string ThirdPartyPath = Path.Combine(ModuleDirectory, "..", "ThirdParty");
@@ -21,14 +23,31 @@ namespace UnrealBuildTool.Rules
 
 			bool bHasGoogleAnalyticsSDK = false;
 
+			// Get Project Path
+			string ProjectPath = Path.GetFullPath(Path.Combine(ModuleDirectory, "../../../../"));
+			List<UProjectInfo> GameProjects = UProjectInfo.FilterGameProjects(false, null);
+			foreach (var GameProject in GameProjects)
+			{
+				ProjectPath = GameProject.Folder.FullName;
+				break;
+			}
+
+			// Get Settings from Config Cache
+			var Ini = UnrealBuildTool.ConfigCache.ReadHierarchy(ConfigHierarchyType.Engine, new DirectoryReference(ProjectPath), Target.Platform);
+			string SettingsPath = "/Script/GoogleAnalytics.GoogleAnalyticsSettings";
+
+			bool bEnableIDFACollection = false;
+
+			if (!Ini.GetBool(SettingsPath, "bEnableIDFACollection", out bEnableIDFACollection))
+				bEnableIDFACollection = false;
+
 			// Additional Frameworks and Libraries for iOS
 			if (Target.Platform == UnrealTargetPlatform.IOS)
 			{
 				PublicFrameworks.AddRange(
 					new string[] {
 						"CoreData",
-						"SystemConfiguration",
-						"AdSupport"
+						"SystemConfiguration"
 					}
 				);
 
@@ -43,8 +62,17 @@ namespace UnrealBuildTool.Rules
 				if (bHasGoogleAnalyticsSDK)
 				{
 					PublicIncludePaths.Add(ThirdPartyIOSPath);
-					PublicAdditionalLibraries.Add(Path.Combine(ThirdPartyIOSPath, "libAdIdAccess.a"));
 					PublicAdditionalLibraries.Add(Path.Combine(ThirdPartyIOSPath, "libGoogleAnalyticsServices.a"));
+
+					if (bEnableIDFACollection)
+					{
+						PublicAdditionalLibraries.Add(Path.Combine(ThirdPartyIOSPath, "libAdIdAccess.a"));
+						PublicFrameworks.AddRange(
+							new string[] {
+								"AdSupport"
+							}
+						);
+					}
 				}
 
 				string PluginPath = Utils.MakePathRelativeTo(ModuleDirectory, BuildConfiguration.RelativeEnginePath);
