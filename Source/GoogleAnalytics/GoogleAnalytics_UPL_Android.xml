@@ -56,7 +56,15 @@ com.android.support,support-v4,25.3.1
 	  </false>
 	</if>
   </AARImports>
-  
+
+  <proguardAdditions>
+	<insert>
+-dontnote android.support.**
+-dontwarn org.apache.http.**
+-dontwarn sun.misc.Unsafe
+	</insert>
+  </proguardAdditions>
+
   <!-- optional additions to the GameActivity imports in GameActivity.java -->
   <gameActivityImportAdditions>
 	<insert>
