@@ -4,13 +4,19 @@
 
 #pragma once
 
+#include "CoreUObject.h"
+#include "Engine.h"
 #include "GoogleAnalyticsSettings.generated.h"
 
 UCLASS(config = Engine, defaultconfig)
-class UGoogleAnalyticsSettings : public UObject
+class GOOGLEANALYTICS_API UGoogleAnalyticsSettings : public UObject
 {
 	GENERATED_BODY()
 
 public:
 	UGoogleAnalyticsSettings(const FObjectInitializer& ObjectInitializer);
+
+	/** Enable IDFA Collection - allows to track personal user informations on iOS */
+	UPROPERTY(Config, EditAnywhere, DisplayName = "Enable IDFA Collection")
+	bool bEnableIDFACollection;
 };

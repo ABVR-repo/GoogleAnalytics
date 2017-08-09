@@ -12,6 +12,8 @@
 #include "Engine.h"
 #include "Core.h"
 #include <string>
+#include "ISettingsModule.h"
+#include "GoogleAnalyticsSettings.h"
 
 #if PLATFORM_IOS
 #if WITH_GOOGLEANALYTICS
@@ -322,11 +324,27 @@ void FAnalyticsGoogleAnalytics::StartupModule()
 #if PLATFORM_IOS && WITH_GOOGLEANALYTICS
 	FIOSCoreDelegates::OnOpenURL.AddStatic(&ListenGoogleAnalyticsOpenURL);
 #endif
+
+	// Register settings
+	if (ISettingsModule* SettingsModule = FModuleManager::GetModulePtr<ISettingsModule>("Settings"))
+	{
+		SettingsModule->RegisterSettings("Project", "Plugins", "GoogleAnalytics",
+			LOCTEXT("RuntimeSettingsName", "Google Analytics"),
+			LOCTEXT("RuntimeSettingsDescription", "Configure the Google Analytics plugin"),
+			GetMutableDefault<UGoogleAnalyticsSettings>()
+		);
+	}
 }
 
 void FAnalyticsGoogleAnalytics::ShutdownModule()
 {
 	FAnalyticsProviderGoogleAnalytics::Destroy();
+
+	// Unregister settings
+	if (ISettingsModule* SettingsModule = FModuleManager::GetModulePtr<ISettingsModule>("Settings"))
+	{
+		SettingsModule->UnregisterSettings("Project", "Plugins", "GoogleAnalytics");
+	}
 }
 
 TSharedPtr<IAnalyticsProvider> FAnalyticsGoogleAnalytics::CreateAnalyticsProvider(const FAnalyticsProviderConfigurationDelegate& GetConfigValue) const
@@ -384,7 +402,11 @@ bool FAnalyticsProviderGoogleAnalytics::StartSession(const TArray<FAnalyticsEven
 		}
 		[[GAI sharedInstance] setTrackUncaughtExceptions:true];
 		id<GAITracker> tracker = [[GAI sharedInstance] trackerWithName:@"DefaultTracker" trackingId : ApiTrackingId.GetNSString()];
-		if (tracker != nil)
+
+		// Settings
+		const UGoogleAnalyticsSettings* DefaultSettings = GetDefault<UGoogleAnalyticsSettings>();
+
+		if (DefaultSettings->bEnableIDFACollection && tracker != nil)
 		{
 			tracker.allowIDFACollection = YES;
 		}
