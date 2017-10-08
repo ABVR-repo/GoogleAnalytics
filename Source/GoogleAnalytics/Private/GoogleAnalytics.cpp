@@ -664,17 +664,17 @@ void FAnalyticsProviderGoogleAnalytics::RecordEvent(const FString& EventName, co
 
 			for (int i = 0; i < Attributes.Num(); i++)
 			{
-				if (Attributes[i].AttrName.Equals("Category") && Attributes[i].AttrValue.Len() > 0)
+				if (Attributes[i].AttrName.Equals("Category") && Attributes[i].ToString().Len() > 0)
 				{
-					Category = Attributes[i].AttrValue;
+					Category = Attributes[i].ToString();
 				}
-				else if (Attributes[i].AttrName.Equals("Label") && Attributes[i].AttrValue.Len() > 0)
+				else if (Attributes[i].AttrName.Equals("Label") && Attributes[i].ToString().Len() > 0)
 				{
-					Label = Attributes[i].AttrValue;
+					Label = Attributes[i].ToString();
 				}
 				else if (Attributes[i].AttrName.Equals("Value"))
 				{
-					Value = FCString::Atof(*Attributes[i].AttrValue);
+					Value = FCString::Atof(*Attributes[i].ToString());
 				}
 			}
 
@@ -813,13 +813,13 @@ void FAnalyticsProviderGoogleAnalytics::RecordItemPurchase(const FString& ItemId
 
 		for (int i = 0; i < EventAttrs.Num(); i++)
 		{
-			if (EventAttrs[i].AttrName.Equals("Currency") && EventAttrs[i].AttrValue.Len() > 0)
+			if (EventAttrs[i].AttrName.Equals("Currency") && EventAttrs[i].ToString().Len() > 0)
 			{
-				Currency = EventAttrs[i].AttrValue;
+				Currency = EventAttrs[i].ToString();
 			}
 			if (EventAttrs[i].AttrName.Equals("PerItemCost"))
 			{
-				PerItemCost = FCString::Atoi(*EventAttrs[i].AttrValue);
+				PerItemCost = FCString::Atoi(*EventAttrs[i].ToString());
 			}
 		}
 
@@ -843,17 +843,17 @@ void FAnalyticsProviderGoogleAnalytics::RecordCurrencyPurchase(const FString& Ga
 
 			for (int i = 0; i < EventAttrs.Num(); i++)
 			{
-				if (EventAttrs[i].AttrName.Equals("RealCurrencyType") && EventAttrs[i].AttrValue.Len() > 0)
+				if (EventAttrs[i].AttrName.Equals("RealCurrencyType") && EventAttrs[i].ToString().Len() > 0)
 				{
-					RealCurrencyType = EventAttrs[i].AttrValue;
+					RealCurrencyType = EventAttrs[i].ToString();
 				}
-				if (EventAttrs[i].AttrName.Equals("RealMoneyCost") && EventAttrs[i].AttrValue.Len() > 0)
+				if (EventAttrs[i].AttrName.Equals("RealMoneyCost") && EventAttrs[i].ToString().Len() > 0)
 				{
-					RealMoneyCost = FCString::Atof(*EventAttrs[i].AttrValue);
+					RealMoneyCost = FCString::Atof(*EventAttrs[i].ToString());
 				}
-				if (EventAttrs[i].AttrName.Equals("PaymentProvider") && EventAttrs[i].AttrValue.Len() > 0)
+				if (EventAttrs[i].AttrName.Equals("PaymentProvider") && EventAttrs[i].ToString().Len() > 0)
 				{
-					PaymentProvider = EventAttrs[i].AttrValue;
+					PaymentProvider = EventAttrs[i].ToString();
 				}
 			}
 
@@ -1022,7 +1022,7 @@ const TArray<FCustomDimension> FAnalyticsProviderGoogleAnalytics::BuildCustomDim
 	for (int i = 0; i < Attributes.Num(); i++)
 	{
 		FString AttributeName = Attributes[i].AttrName;
-		if (AttributeName.Contains("CustomDimension") && Attributes[i].AttrValue.Len() > 0)
+		if (AttributeName.Contains("CustomDimension") && Attributes[i].ToString().Len() > 0)
 		{
 			AttributeName = AttributeName.Replace(*FString("CustomDimension"), *FString(""));
 
@@ -1030,7 +1030,7 @@ const TArray<FCustomDimension> FAnalyticsProviderGoogleAnalytics::BuildCustomDim
 			{
 				FCustomDimension CustomDimension;
 				CustomDimension.Index = FCString::Atoi(*AttributeName);
-				CustomDimension.Value = Attributes[i].AttrValue;
+				CustomDimension.Value = Attributes[i].ToString();
 
 				CustomDimensions.Add(CustomDimension);
 			}
@@ -1047,15 +1047,15 @@ const TArray<FCustomMetric> FAnalyticsProviderGoogleAnalytics::BuildCustomMetric
 	for (int i = 0; i < Attributes.Num(); i++)
 	{
 		FString AttributeName = Attributes[i].AttrName;
-		if (AttributeName.Contains("CustomMetric") && Attributes[i].AttrValue.Len() > 0)
+		if (AttributeName.Contains("CustomMetric") && Attributes[i].ToString().Len() > 0)
 		{
 			AttributeName = AttributeName.Replace(*FString("CustomMetric"), *FString(""));
 
-			if (AttributeName.IsNumeric() && Attributes[i].AttrValue.IsNumeric())
+			if (AttributeName.IsNumeric() && Attributes[i].ToString().IsNumeric())
 			{
 				FCustomMetric CustomMetric;
 				CustomMetric.Index = FCString::Atoi(*AttributeName);
-				CustomMetric.Value = FCString::Atof(*Attributes[i].AttrValue);
+				CustomMetric.Value = FCString::Atof(*Attributes[i].ToString());
 
 				CustomMetrics.Add(CustomMetric);
 			}

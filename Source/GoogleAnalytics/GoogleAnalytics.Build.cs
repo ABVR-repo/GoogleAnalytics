@@ -4,6 +4,7 @@
 
 using System.IO;
 using System.Collections.Generic;
+using Tools.DotNETCommon;
 
 namespace UnrealBuildTool.Rules
 {
@@ -23,17 +24,11 @@ namespace UnrealBuildTool.Rules
 
 			bool bHasGoogleAnalyticsSDK = false;
 
-			// Get Project Path
-			string ProjectPath = Path.GetFullPath(Path.Combine(ModuleDirectory, "../../../../"));
-			List<UProjectInfo> GameProjects = UProjectInfo.FilterGameProjects(false, null);
-			foreach (var GameProject in GameProjects)
-			{
-				ProjectPath = GameProject.Folder.FullName;
-				break;
-			}
+            // Get Project Path
+            string ProjectPath = Path.GetDirectoryName(Target.ProjectFile.ToString());
 
-			// Get Settings from Config Cache
-			var Ini = UnrealBuildTool.ConfigCache.ReadHierarchy(ConfigHierarchyType.Engine, new DirectoryReference(ProjectPath), Target.Platform);
+            // Get Settings from Config Cache
+            var Ini = UnrealBuildTool.ConfigCache.ReadHierarchy(ConfigHierarchyType.Engine, new DirectoryReference(ProjectPath), Target.Platform);
 			string SettingsPath = "/Script/GoogleAnalytics.GoogleAnalyticsSettings";
 
 			bool bEnableIDFACollection = false;
@@ -75,7 +70,7 @@ namespace UnrealBuildTool.Rules
 					}
 				}
 
-				string PluginPath = Utils.MakePathRelativeTo(ModuleDirectory, BuildConfiguration.RelativeEnginePath);
+				string PluginPath = Utils.MakePathRelativeTo(ModuleDirectory, Target.RelativeEnginePath);
 				AdditionalPropertiesForReceipt.Add(new ReceiptProperty("IOSPlugin", Path.Combine(PluginPath, "GoogleAnalytics_UPL_IOS.xml")));
 			}
 			// Additional Frameworks and Libraries for Android
@@ -83,7 +78,7 @@ namespace UnrealBuildTool.Rules
 			{
 				bHasGoogleAnalyticsSDK = true;
 				PrivateDependencyModuleNames.AddRange(new string[] { "Launch" });
-				string PluginPath = Utils.MakePathRelativeTo(ModuleDirectory, BuildConfiguration.RelativeEnginePath);
+				string PluginPath = Utils.MakePathRelativeTo(ModuleDirectory, Target.RelativeEnginePath);
 				AdditionalPropertiesForReceipt.Add(new ReceiptProperty("AndroidPlugin", Path.Combine(PluginPath, "GoogleAnalytics_UPL_Android.xml")));
 			}
 			// Other platforms
