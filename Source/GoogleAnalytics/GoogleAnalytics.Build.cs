@@ -25,7 +25,11 @@ namespace UnrealBuildTool.Rules
 			bool bHasGoogleAnalyticsSDK = false;
 
             // Get Project Path
-            string ProjectPath = Path.GetDirectoryName(Target.ProjectFile.ToString());
+            string ProjectPath = Path.GetFullPath(Path.Combine(ModuleDirectory, "../../../../"));
+            if (Target.ProjectFile != null)
+            {
+                ProjectPath = Path.GetDirectoryName(Target.ProjectFile.ToString());
+            }
 
             // Get Settings from Config Cache
             var Ini = UnrealBuildTool.ConfigCache.ReadHierarchy(ConfigHierarchyType.Engine, new DirectoryReference(ProjectPath), Target.Platform);
