@@ -98,7 +98,7 @@ namespace UnrealBuildTool.Rules
 			else
 			{
 				Definitions.Add("WITH_GOOGLEANALYTICS=0");
-				Log.TraceError("Google Analytics SDK not installed!");
+				Console.WriteLine("Google Analytics SDK not installed!");
 			}
 		}
 	}
