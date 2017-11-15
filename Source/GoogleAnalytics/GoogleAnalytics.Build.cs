@@ -2,6 +2,7 @@
 // Created by Patryk Stepniewski
 // Copyright (c) 2014-2017 gameDNA Ltd. All Rights Reserved.
 
+using System;
 using System.IO;
 using System.Collections.Generic;
 using Tools.DotNETCommon;
