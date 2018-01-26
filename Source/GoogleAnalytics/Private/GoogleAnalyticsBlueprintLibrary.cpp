@@ -20,6 +20,12 @@ void UGoogleAnalyticsBlueprintLibrary::RecordGoogleScreen(const FString& ScreenN
 	}
 }
 
+
+void UGoogleAnalyticsBlueprintLibrary::RecordGoogleScreen(const FString& ScreenName)
+{
+	RecordGoogleScreen(ScreenName, TArray<FCustomDimension>(), TArray<FCustomMetric>());
+}
+
 /** Record Google Event */
 void UGoogleAnalyticsBlueprintLibrary::RecordGoogleEvent(const FString& EventCategory, const FString& EventAction, const FString& EventLabel, const int32 EventValue, const TArray<FCustomDimension> CustomDimensions, const TArray<FCustomMetric> CustomMetrics)
 {
@@ -42,6 +48,12 @@ void UGoogleAnalyticsBlueprintLibrary::RecordGoogleEvent(const FString& EventCat
 
 		Provider->RecordEvent(EventAction, Params);
 	}
+}
+
+
+void UGoogleAnalyticsBlueprintLibrary::RecordGoogleEvent(const FString& EventCategory, const FString& EventAction, const FString& EventLabel, const int32 EventValue)
+{
+	RecordGoogleEvent(EventCategory, EventAction, EventLabel, EventValue, TArray<FCustomDimension>(), TArray<FCustomMetric>());
 }
 
 /** Set new Tracking Id (only for Google Analytics) */
@@ -75,6 +87,12 @@ void UGoogleAnalyticsBlueprintLibrary::RecordGoogleSocialInteraction(const FStri
 	}
 }
 
+
+void UGoogleAnalyticsBlueprintLibrary::RecordGoogleSocialInteraction(const FString& SocialNetwork, const FString& SocialAction, const FString& SocialTarget)
+{
+	RecordGoogleSocialInteraction(SocialNetwork, SocialAction, SocialTarget, TArray<FCustomDimension>(), TArray<FCustomMetric>());
+}
+
 /** Record Google User Timing */ 
 void UGoogleAnalyticsBlueprintLibrary::RecordGoogleUserTiming(const FString& TimingCategory, const int32 TimingValue, const FString& TimingName, const TArray<FCustomDimension> CustomDimensions, const TArray<FCustomMetric> CustomMetrics)
 {
@@ -83,4 +101,9 @@ void UGoogleAnalyticsBlueprintLibrary::RecordGoogleUserTiming(const FString& Tim
 	{
 		Provider->RecordUserTiming(TimingCategory, TimingValue, TimingName, CustomDimensions, CustomMetrics);
 	}
+}
+
+void UGoogleAnalyticsBlueprintLibrary::RecordGoogleUserTiming(const FString& TimingCategory, const int32 TimingValue, const FString& TimingName)
+{
+	RecordGoogleUserTiming(TimingCategory, TimingValue, TimingName, TArray<FCustomDimension>(), TArray<FCustomMetric>());
 }
