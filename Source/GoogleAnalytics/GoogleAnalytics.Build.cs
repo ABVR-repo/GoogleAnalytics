@@ -1,6 +1,6 @@
 // Google Analytics Provider
 // Created by Patryk Stepniewski
-// Copyright (c) 2014-2017 gameDNA Ltd. All Rights Reserved.
+// Copyright (c) 2014-2018 gameDNA Ltd. All Rights Reserved.
 
 using System;
 using System.IO;
@@ -76,7 +76,7 @@ namespace UnrealBuildTool.Rules
 				}
 
 				string PluginPath = Utils.MakePathRelativeTo(ModuleDirectory, Target.RelativeEnginePath);
-				AdditionalPropertiesForReceipt.Add(new ReceiptProperty("IOSPlugin", Path.Combine(PluginPath, "GoogleAnalytics_UPL_IOS.xml")));
+				AdditionalPropertiesForReceipt.Add("IOSPlugin", Path.Combine(PluginPath, "GoogleAnalytics_UPL_IOS.xml"));
 			}
 			// Additional Frameworks and Libraries for Android
 			else if (Target.Platform == UnrealTargetPlatform.Android)
@@ -84,7 +84,7 @@ namespace UnrealBuildTool.Rules
 				bHasGoogleAnalyticsSDK = true;
 				PrivateDependencyModuleNames.AddRange(new string[] { "Launch" });
 				string PluginPath = Utils.MakePathRelativeTo(ModuleDirectory, Target.RelativeEnginePath);
-				AdditionalPropertiesForReceipt.Add(new ReceiptProperty("AndroidPlugin", Path.Combine(PluginPath, "GoogleAnalytics_UPL_Android.xml")));
+				AdditionalPropertiesForReceipt.Add("AndroidPlugin", Path.Combine(PluginPath, "GoogleAnalytics_UPL_Android.xml"));
 			}
 			// Other platforms
 			else
@@ -94,11 +94,11 @@ namespace UnrealBuildTool.Rules
 
 			if (bHasGoogleAnalyticsSDK)
 			{
-				Definitions.Add("WITH_GOOGLEANALYTICS=1");
+				PublicDefinitions.Add("WITH_GOOGLEANALYTICS=1");
 			}
 			else
 			{
-				Definitions.Add("WITH_GOOGLEANALYTICS=0");
+				PublicDefinitions.Add("WITH_GOOGLEANALYTICS=0");
 				Console.WriteLine("Google Analytics SDK not installed!");
 			}
 		}
