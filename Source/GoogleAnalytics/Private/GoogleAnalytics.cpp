@@ -733,7 +733,7 @@ void FAnalyticsProviderGoogleAnalytics::RecordScreen(const FString& ScreenName, 
 			AndroidThunkCpp_GoogleAnalyticsRecordScreen(ScreenName, CustomDimensions, CustomMetrics);
 #else
 			TSharedRef<IHttpRequest> HttpRequest = FHttpModule::Get().CreateRequest();
-			HttpRequest->SetURL("https://www.google-analytics.com/collect?v=1&t=pageview&tid=" + ApiTrackingId + "&cid=" + UniversalCid + "&dp=" + FPlatformHttp::UrlEncode(ScreenName) + "&geoid=" + Location + "&uid=" + UserId + BuildCustomDimensions(CustomDimensions) + BuildCustomMetrics(CustomMetrics) + GetSystemInfo());
+			HttpRequest->SetURL("https://www.google-analytics.com/collect?v=1&t=pageview&tid=" + ApiTrackingId + "&cid=" + UniversalCid + "&dp=" + FPlatformHttp::UrlEncode(ScreenName) + "&dt=" + FPlatformHttp::UrlEncode(ScreenName) + "&geoid=" + Location + "&uid=" + UserId + BuildCustomDimensions(CustomDimensions) + BuildCustomMetrics(CustomMetrics) + GetSystemInfo());
 			HttpRequest->SetVerb("GET");
 			HttpRequest->ProcessRequest();
 #endif
