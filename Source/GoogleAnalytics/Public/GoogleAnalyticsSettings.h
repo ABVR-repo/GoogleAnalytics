@@ -16,7 +16,7 @@ class GOOGLEANALYTICS_API UGoogleAnalyticsSettings : public UObject
 public:
 	UGoogleAnalyticsSettings(const FObjectInitializer& ObjectInitializer);
 
-	/** Enable IDFA Collection - allows to track personal user informations on iOS */
+	/** Enable IDFA Collection - allows to track personal user informations */
 	UPROPERTY(Config, EditAnywhere, Category = "Google Analytics", DisplayName = "Enable IDFA Collection")
 	bool bEnableIDFACollection;
 };

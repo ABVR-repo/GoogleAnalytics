@@ -92,7 +92,7 @@
 		  return uri.toString();
 	  }
 	  
-	  synchronized public void AndroidThunkJava_GoogleAnalyticsStartSession(String TrackingId, int DispatchInterval)
+	  synchronized public void AndroidThunkJava_GoogleAnalyticsStartSession(String TrackingId, int DispatchInterval, boolean AdvertisingIdCollection, boolean AnonymizeIp)
 	  {
 		  try 
 		  {
@@ -106,7 +106,8 @@
 						analytics.setLocalDispatchPeriod(DispatchInterval);
 					  }
 					  mTracker = analytics.newTracker(TrackingId);
-					  mTracker.enableAdvertisingIdCollection(true);
+					  mTracker.enableAdvertisingIdCollection(AdvertisingIdCollection);
+					  mTracker.setAnonymizeIp(AnonymizeIp);
 					  mTracker.enableExceptionReporting(true);
 					  mTracker.setSessionTimeout(300);
 				  }

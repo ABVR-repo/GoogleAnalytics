@@ -107,3 +107,13 @@ void UGoogleAnalyticsBlueprintLibrary::RecordGoogleUserTiming(const FString& Tim
 {
 	RecordGoogleUserTiming(TimingCategory, TimingValue, TimingName, TArray<FCustomDimension>(), TArray<FCustomMetric>());
 }
+
+/** If true, the IP address of the sender will be anonymized - GDPR compliant (only for Google Analytics) */
+void UGoogleAnalyticsBlueprintLibrary::SetAnonymizeIP(const bool Anonymize)
+{
+	TSharedPtr<FAnalyticsProviderGoogleAnalytics> Provider = FAnalyticsProviderGoogleAnalytics::GetProvider();
+	if (Provider.IsValid())
+	{
+		Provider->SetAnonymizeIp(Anonymize);
+	}
+}

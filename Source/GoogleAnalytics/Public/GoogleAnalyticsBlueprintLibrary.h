@@ -48,4 +48,8 @@ class GOOGLEANALYTICS_API UGoogleAnalyticsBlueprintLibrary : public UBlueprintFu
 	/** Get current Tracking Id (only for Google Analytics) */
 	UFUNCTION(BlueprintCallable, Category = "Analytics")
 	static FString GetTrackingId();
+
+	/** If true, the IP address of the sender will be anonymized - GDPR compliant (only for Google Analytics) */
+	UFUNCTION(BlueprintCallable, Category = "Analytics")
+	static void SetAnonymizeIP(const bool Anonymize);
 };

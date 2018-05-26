@@ -108,13 +108,13 @@ jfloatArray BuildCustomMetricsValueArray(const TArray<FCustomMetric>& CustomMetr
 #endif
 
 #if PLATFORM_ANDROID
-void AndroidThunkCpp_GoogleAnalyticsStartSession(FString& TrackingId, int32& DispatchInterval)
+void AndroidThunkCpp_GoogleAnalyticsStartSession(FString& TrackingId, int32& DispatchInterval, bool AdvertisingIdCollection, bool AnonymizeIp)
 {
 	if (JNIEnv* Env = FAndroidApplication::GetJavaEnv())
 	{
 		jstring TrackingIdFinal = Env->NewStringUTF(TCHAR_TO_UTF8(*TrackingId));
-		static jmethodID Method = FJavaWrapper::FindMethod(Env, FJavaWrapper::GameActivityClassID, "AndroidThunkJava_GoogleAnalyticsStartSession", "(Ljava/lang/String;I)V", false);
-		FJavaWrapper::CallVoidMethod(Env, FJavaWrapper::GameActivityThis, Method, TrackingIdFinal, DispatchInterval);
+		static jmethodID Method = FJavaWrapper::FindMethod(Env, FJavaWrapper::GameActivityClassID, "AndroidThunkJava_GoogleAnalyticsStartSession", "(Ljava/lang/String;IZZ)V", false);
+		FJavaWrapper::CallVoidMethod(Env, FJavaWrapper::GameActivityThis, Method, TrackingIdFinal, DispatchInterval, AdvertisingIdCollection, AnonymizeIp);
 		Env->DeleteLocalRef(TrackingIdFinal);
 	}
 }
@@ -378,6 +378,7 @@ FAnalyticsProviderGoogleAnalytics::FAnalyticsProviderGoogleAnalytics(const FStri
 	ApiTrackingId(TrackingId),
 	bHasSessionStarted(false),
 	bSessionStartedSent(false),
+	bAnonymizeIp(false),
 	Interval(SendInterval)
 {
 }
@@ -394,6 +395,9 @@ bool FAnalyticsProviderGoogleAnalytics::StartSession(const TArray<FAnalyticsEven
 {
 	if (!bHasSessionStarted && ApiTrackingId.Len() > 0)
 	{
+		// Settings
+		const UGoogleAnalyticsSettings* DefaultSettings = GetDefault<UGoogleAnalyticsSettings>();
+
 #if PLATFORM_IOS
 #if WITH_GOOGLEANALYTICS
 		if (Interval > 0)
@@ -403,12 +407,14 @@ bool FAnalyticsProviderGoogleAnalytics::StartSession(const TArray<FAnalyticsEven
 		[[GAI sharedInstance] setTrackUncaughtExceptions:true];
 		id<GAITracker> tracker = [[GAI sharedInstance] trackerWithName:@"DefaultTracker" trackingId : ApiTrackingId.GetNSString()];
 
-		// Settings
-		const UGoogleAnalyticsSettings* DefaultSettings = GetDefault<UGoogleAnalyticsSettings>();
-
 		if (DefaultSettings->bEnableIDFACollection && tracker != nil)
 		{
 			tracker.allowIDFACollection = YES;
+		}
+
+		if(bAnonymizeIp && tracker != nil)
+		{
+			[tracker set : @"ga_anonymizeIp" value : @"true"];
 		}
 
 		if (OpenUrlIOS.Len() > 0 && tracker != nil)
@@ -428,7 +434,7 @@ bool FAnalyticsProviderGoogleAnalytics::StartSession(const TArray<FAnalyticsEven
 		UE_LOG(LogGoogleAnalytics, Warning, TEXT("WITH_GOOGLEANALYTICS=0. Are you missing the SDK?"));
 #endif
 #elif PLATFORM_ANDROID
-		AndroidThunkCpp_GoogleAnalyticsStartSession(ApiTrackingId, Interval);
+		AndroidThunkCpp_GoogleAnalyticsStartSession(ApiTrackingId, Interval, DefaultSettings->bEnableIDFACollection, bAnonymizeIp);
 #else
 		FString UniversalCidBufor("");
 		GConfig->GetString(TEXT("GoogleAnalytics"), TEXT("UniversalCid"), UniversalCidBufor, GEngineIni);
@@ -469,6 +475,7 @@ void FAnalyticsProviderGoogleAnalytics::EndSession()
 #endif
 		bHasSessionStarted = false;
 		bSessionStartedSent = false;
+		bAnonymizeIp = false;
 	}
 }
 
@@ -483,6 +490,11 @@ void FAnalyticsProviderGoogleAnalytics::SetTrackingId(const FString& TrackingId)
 FString FAnalyticsProviderGoogleAnalytics::GetTrackingId()
 {
 	return ApiTrackingId;
+}
+
+void FAnalyticsProviderGoogleAnalytics::SetAnonymizeIp(const bool Anonymize)
+{
+	bAnonymizeIp = Anonymize;
 }
 
 void FAnalyticsProviderGoogleAnalytics::SetOpenUrlIOS(const FString& OpenUrl)
@@ -519,6 +531,11 @@ FString FAnalyticsProviderGoogleAnalytics::GetSystemInfo()
 	{
 		bSessionStartedSent = true;
 		SystemInfo += "&sc=start";
+	}
+
+	if(bAnonymizeIp)
+	{
+		SystemInfo += "&aip=1";
 	}
 
 	return SystemInfo;
