@@ -4,8 +4,8 @@
 
 #pragma once
 
-#include "IAnalyticsProviderModule.h"
-#include "IAnalyticsProvider.h"
+#include "Interfaces/IAnalyticsProviderModule.h"
+#include "Interfaces/IAnalyticsProvider.h"
 #include "Analytics.h"
 #include "GoogleAnalyticsDelegates.h"
 
