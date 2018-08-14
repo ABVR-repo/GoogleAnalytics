@@ -133,19 +133,19 @@
 		  {
 			  if(mTracker != null) 
 			  {
-			      HitBuilders.EventBuilder eventBuilder = new HitBuilders.EventBuilder();
+			      HitBuilders.ScreenViewBuilder screenViewBuilder = new HitBuilders.ScreenViewBuilder();
 				  for(int i = 0; i &lt; CustomDimensionIndex.length; i++)
 				  {
-					  eventBuilder.setCustomDimension(CustomDimensionIndex[i], CustomDimensionValue[i]);
+					  screenViewBuilder.setCustomDimension(CustomDimensionIndex[i], CustomDimensionValue[i]);
 				  }
 				  
 				  for(int i = 0; i &lt; CustomMetricIndex.length; i++)
 				  {
-					  eventBuilder.setCustomMetric(CustomMetricIndex[i], CustomMetricValue[i]);
+					  screenViewBuilder.setCustomMetric(CustomMetricIndex[i], CustomMetricValue[i]);
 				  }
 				  
 				  mTracker.setScreenName(ScreenName);
-				  mTracker.send(eventBuilder.build());
+				  mTracker.send(screenViewBuilder.build());
 			  }
 		  } 
 		  catch(Exception e) 
