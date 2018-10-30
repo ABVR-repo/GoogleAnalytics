@@ -8,4 +8,80 @@
   <init>
 	<log text="GoogleAnalytics init"/>
   </init>
+
+  <iosPListUpdates>
+	<!-- NSAppTransportSecurity -->
+	<loopElements tag="$">
+	  <setStringFromTag result="sCurrentTag" tag="$"/>
+	  <setBoolIsEqual result="isRootDictionary" arg1="$S(sCurrentTag)" arg2="dict"/>
+
+	  <if condition="isRootDictionary">
+		<true>
+		  <setBool result="bNSAppTransportSecurityFound" value="false"/>
+		  <setBool result="bNSAppTransportSecuritySearchNextElement" value="false"/>
+		  <setBool result="bNSAppTransportSecurityRemoveNextElement" value="false"/>
+
+		  <loopElements tag="$">
+			<setStringFromTagText result="TagValueFindCoreElement" tag="$"/>
+			<setBoolIsEqual result="isNSAppTransportSecurity" arg1="$S(TagValueFindCoreElement)" arg2="NSAppTransportSecurity"/>
+
+			<if condition="isNSAppTransportSecurity">
+			  <true>
+				<setBool result="bNSAppTransportSecurityFound" value="true"/>
+			  </true>
+			</if>
+		  </loopElements>
+
+		  <if condition="bNSAppTransportSecurityFound">
+			<false>
+			  <setElement result="dNSAppTransportSecurity" value="key" text="NSAppTransportSecurity"/>
+			  <addElement tag="$" name="dNSAppTransportSecurity"/>
+			  <setElement result="dNSAppTransportSecurityRootDict" value="dict"/>
+			  <addElement tag="$" name="dNSAppTransportSecurityRootDict"/>
+			</false>
+		  </if>
+
+		  <loopElements tag="$">
+			<setStringFromTagText result="TagValue" tag="$"/>
+			<setBoolIsEqual result="isNSAppTransportSecurity" arg1="$S(TagValue)" arg2="NSAppTransportSecurity"/>
+
+			<if condition="bNSAppTransportSecuritySearchNextElement">
+			  <true>
+				<setBool result="bNSAppTransportSecuritySearchNextElement" value="false"/>
+				<loopElements tag="$">
+				  <setStringFromTagText result="NSAppTransportSecurityTagValue" tag="$"/>
+
+				  <if condition="bNSAppTransportSecurityRemoveNextElement">
+					<true>
+					  <removeElement tag="$"/>
+					  <setBool result="bNSAppTransportSecurityRemoveNextElement" value="false"/>
+					</true>
+				  </if>
+
+				  <setBoolIsEqual result="isNSAllowsArbitraryLoads" arg1="$S(NSAppTransportSecurityTagValue)" arg2="NSAllowsArbitraryLoads"/>
+				  <if condition="isNSAllowsArbitraryLoads">
+					<true>
+					  <removeElement tag="$"/>
+					  <setBool result="bNSAppTransportSecurityRemoveNextElement" value="true"/>
+					</true>
+				  </if>
+				</loopElements>
+
+				<setElement result="eNSAllowsArbitraryLoads" value="key" text="NSAllowsArbitraryLoads"/>
+				<addElement tag="$" name="eNSAllowsArbitraryLoads"/>
+				<setElement result="eNSAllowsArbitraryLoadsTrue" value="true" text=""/>
+				<addElement tag="$" name="eNSAllowsArbitraryLoadsTrue"/>
+			  </true>
+			</if>
+
+			<if condition="isNSAppTransportSecurity">
+			  <true>
+				<setBool result="bNSAppTransportSecuritySearchNextElement" value="true"/>
+			  </true>
+			</if>
+		  </loopElements>
+		</true>
+	  </if>
+	</loopElements>
+  </iosPListUpdates>
 </root>
