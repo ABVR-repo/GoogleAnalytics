@@ -17,19 +17,11 @@
 		mavenCentral()
 	  }
 	  dependencies {
-		compile 'com.google.android.gms:play-services-base:15.0.1'
-		compile 'com.google.android.gms:play-services-ads:15.0.1'
-		compile 'com.google.android.gms:play-services-analytics:16.0.1'
-		compile 'com.google.android.gms:play-services-auth:15.0.1'
-		compile 'com.google.android.gms:play-services-games:15.0.1'
-		compile 'com.google.android.gms:play-services-nearby:15.0.1'
-		compile 'com.google.android.gms:play-services-location:15.0.1'
-		compile 'com.google.android.gms:play-services-plus:15.0.1'
-		compile 'com.android.support:appcompat-v7:25.3.1'
-		compile 'com.android.support:recyclerview-v7:25.3.1'
-		compile 'com.android.support:support-annotations:25.3.1'
-		compile 'com.android.support:support-v4:25.3.1'
-		compile 'com.android.support:support-v13:25.3.1'
+		compile 'com.google.android.gms:play-services-analytics:16.0.4'
+		compile 'com.google.android.gms:play-services-auth:16.0.1'
+		compile 'com.google.android.gms:play-services-games:16.0.0'
+		compile 'com.google.android.gms:play-services-nearby:16.0.0'
+		compile 'com.google.android.gms:play-services-plus:16.0.0'
 	  }
 	</insert>
   </buildGradleAdditions>
