@@ -20,11 +20,6 @@ namespace UnrealBuildTool.Rules
 			PrivateIncludePathModuleNames.AddRange(new string[] { "Settings" });
 			PublicIncludePathModuleNames.Add("Analytics");
 
-			string ThirdPartyPath = Path.Combine(ModuleDirectory, "..", "ThirdParty");
-			string ThirdPartyIOSPath = Path.Combine(ThirdPartyPath, "IOS");
-
-			bool bHasGoogleAnalyticsSDK = false;
-
             // Get Project Path
             string ProjectPath = Path.GetFullPath(Path.Combine(ModuleDirectory, "../../../../"));
             if (Target.ProjectFile != null)
@@ -34,72 +29,19 @@ namespace UnrealBuildTool.Rules
 
             // Get Settings from Config Cache
             var Ini = UnrealBuildTool.ConfigCache.ReadHierarchy(ConfigHierarchyType.Engine, new DirectoryReference(ProjectPath), Target.Platform);
-			string SettingsPath = "/Script/GoogleAnalytics.GoogleAnalyticsSettings";
-
-			bool bEnableIDFACollection = false;
-
-			if (!Ini.GetBool(SettingsPath, "bEnableIDFACollection", out bEnableIDFACollection))
-				bEnableIDFACollection = false;
 
 			// Additional Frameworks and Libraries for iOS
 			if (Target.Platform == UnrealTargetPlatform.IOS)
 			{
-				PublicFrameworks.AddRange(
-					new string[] {
-						"CoreData",
-						"SystemConfiguration"
-					}
-				);
-
-				PublicAdditionalLibraries.Add("sqlite3");
-				PublicAdditionalLibraries.Add("z");
-
-				bHasGoogleAnalyticsSDK = (Directory.Exists(ThirdPartyPath) &&
-										  Directory.Exists(ThirdPartyIOSPath) &&
-										  File.Exists(Path.Combine(ThirdPartyIOSPath, "libAdIdAccess.a")) &&
-										  File.Exists(Path.Combine(ThirdPartyIOSPath, "libGoogleAnalyticsServices.a")));
-
-				if (bHasGoogleAnalyticsSDK)
-				{
-					PublicIncludePaths.Add(ThirdPartyIOSPath);
-					PublicAdditionalLibraries.Add(Path.Combine(ThirdPartyIOSPath, "libGoogleAnalyticsServices.a"));
-
-					if (bEnableIDFACollection)
-					{
-						PublicAdditionalLibraries.Add(Path.Combine(ThirdPartyIOSPath, "libAdIdAccess.a"));
-						PublicFrameworks.AddRange(
-							new string[] {
-								"AdSupport"
-							}
-						);
-					}
-				}
-
 				string PluginPath = Utils.MakePathRelativeTo(ModuleDirectory, Target.RelativeEnginePath);
 				AdditionalPropertiesForReceipt.Add("IOSPlugin", Path.Combine(PluginPath, "GoogleAnalytics_UPL_IOS.xml"));
 			}
 			// Additional Frameworks and Libraries for Android
 			else if (Target.Platform == UnrealTargetPlatform.Android)
 			{
-				bHasGoogleAnalyticsSDK = true;
 				PrivateDependencyModuleNames.AddRange(new string[] { "Launch" });
 				string PluginPath = Utils.MakePathRelativeTo(ModuleDirectory, Target.RelativeEnginePath);
 				AdditionalPropertiesForReceipt.Add("AndroidPlugin", Path.Combine(PluginPath, "GoogleAnalytics_UPL_Android.xml"));
-			}
-			// Other platforms
-			else
-			{
-				bHasGoogleAnalyticsSDK = true;
-			}
-
-			if (bHasGoogleAnalyticsSDK)
-			{
-				PublicDefinitions.Add("WITH_GOOGLEANALYTICS=1");
-			}
-			else
-			{
-				PublicDefinitions.Add("WITH_GOOGLEANALYTICS=0");
-				Console.WriteLine("Google Analytics SDK not installed!");
 			}
 		}
 	}
