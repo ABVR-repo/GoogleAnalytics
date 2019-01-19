@@ -21,8 +21,15 @@
         "Win32",
         "Linux",
         "Mac",
-        "IOS",
-        "Android"
+		"IOS",
+		"TVOS",
+		"Android",
+		"HTML5",
+		"PS4",
+		"XboxOne",
+		"Switch",
+		"Lumin",
+		"Quail"
       ]
     }
   ],
