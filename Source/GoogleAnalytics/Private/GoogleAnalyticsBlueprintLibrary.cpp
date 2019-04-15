@@ -1,6 +1,6 @@
 // Google Analytics Provider
 // Created by Patryk Stepniewski
-// Copyright (c) 2014-2018 gameDNA Ltd. All Rights Reserved.
+// Copyright (c) 2014-2019 gameDNA Ltd. All Rights Reserved.
 
 #include "GoogleAnalyticsBlueprintLibrary.h"
 
@@ -94,18 +94,18 @@ void UGoogleAnalyticsBlueprintLibrary::RecordGoogleSocialInteraction(const FStri
 }
 
 /** Record Google User Timing */ 
-void UGoogleAnalyticsBlueprintLibrary::RecordGoogleUserTiming(const FString& TimingCategory, const int32 TimingValue, const FString& TimingName, const TArray<FCustomDimension> CustomDimensions, const TArray<FCustomMetric> CustomMetrics)
+void UGoogleAnalyticsBlueprintLibrary::RecordGoogleUserTiming(const FString& TimingCategory, const int32 TimingValue, const FString& TimingName, const FString& TimingLabel, const TArray<FCustomDimension> CustomDimensions, const TArray<FCustomMetric> CustomMetrics)
 {
 	TSharedPtr<FAnalyticsProviderGoogleAnalytics> Provider = FAnalyticsProviderGoogleAnalytics::GetProvider();
 	if (Provider.IsValid())
 	{
-		Provider->RecordUserTiming(TimingCategory, TimingValue, TimingName, CustomDimensions, CustomMetrics);
+		Provider->RecordUserTiming(TimingCategory, TimingValue, TimingName, TimingLabel, CustomDimensions, CustomMetrics);
 	}
 }
 
-void UGoogleAnalyticsBlueprintLibrary::RecordGoogleUserTiming(const FString& TimingCategory, const int32 TimingValue, const FString& TimingName)
+void UGoogleAnalyticsBlueprintLibrary::RecordGoogleUserTiming(const FString& TimingCategory, const int32 TimingValue, const FString& TimingName, const FString& TimingLabel)
 {
-	RecordGoogleUserTiming(TimingCategory, TimingValue, TimingName, TArray<FCustomDimension>(), TArray<FCustomMetric>());
+	RecordGoogleUserTiming(TimingCategory, TimingValue, TimingName, TimingLabel, TArray<FCustomDimension>(), TArray<FCustomMetric>());
 }
 
 /** If true, the IP address of the sender will be anonymized - GDPR compliant (only for Google Analytics) */

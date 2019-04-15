@@ -1,6 +1,6 @@
 // Google Analytics Provider
 // Created by Patryk Stepniewski
-// Copyright (c) 2014-2018 gameDNA Ltd. All Rights Reserved.
+// Copyright (c) 2014-2019 gameDNA Ltd. All Rights Reserved.
 
 #pragma once
 
@@ -36,10 +36,10 @@ class GOOGLEANALYTICS_API UGoogleAnalyticsBlueprintLibrary : public UBlueprintFu
 
 	/** Records an user timing (only for Google Analytics) */
 	UFUNCTION(BlueprintCallable, Category = "Analytics", meta = (AutoCreateRefTerm = "CustomDimensions, CustomMetrics"))
-	static void RecordGoogleUserTiming(const FString& TimingCategory, const int32 TimingValue, const FString& TimingName, const TArray<FCustomDimension> CustomDimensions, const TArray<FCustomMetric> CustomMetrics);
+	static void RecordGoogleUserTiming(const FString& TimingCategory, const int32 TimingValue, const FString& TimingName, const FString& TimingLabel, const TArray<FCustomDimension> CustomDimensions, const TArray<FCustomMetric> CustomMetrics);
 
 	/** Records an user timing (only for Google Analytics) */
-	static void RecordGoogleUserTiming(const FString& TimingCategory, const int32 TimingValue, const FString& TimingName);
+	static void RecordGoogleUserTiming(const FString& TimingCategory, const int32 TimingValue, const FString& TimingName, const FString& TimingLabel = FString());
 
 	/** Set new Tracking Id (only for Google Analytics) */
 	UFUNCTION(BlueprintCallable, Category = "Analytics")
