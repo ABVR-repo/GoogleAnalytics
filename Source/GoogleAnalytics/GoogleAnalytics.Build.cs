@@ -14,8 +14,9 @@ namespace UnrealBuildTool.Rules
 		public GoogleAnalytics(ReadOnlyTargetRules Target) : base(Target)
 		{
 			PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
+            PrecompileForTargets = PrecompileTargetsType.Any;
 
-			PrivateDependencyModuleNames.AddRange(new string[] { "Analytics", "HTTP", "Json" });
+            PrivateDependencyModuleNames.AddRange(new string[] { "Analytics", "HTTP", "Json" });
 			PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine" });
 			PrivateIncludePathModuleNames.AddRange(new string[] { "Settings" });
 			PublicIncludePathModuleNames.Add("Analytics");
