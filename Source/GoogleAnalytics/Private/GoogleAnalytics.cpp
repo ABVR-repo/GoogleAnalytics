@@ -103,6 +103,7 @@ bool FAnalyticsProviderGoogleAnalytics::StartSession(const TArray<FAnalyticsEven
 		}
 
 		GConfig->SetString(TEXT("GoogleAnalytics"), TEXT("UniversalCid"), *UniversalCid, GEngineIni);
+		GConfig->Flush(false, GEngineIni);
 
 		RecordScreen("Game Launched");
 
