@@ -1,46 +1,39 @@
 {
-  "FileVersion": 3,
-  "Version": 1,
-  "VersionName": "2.11.1",
-  "FriendlyName": "Google Analytics Provider",
-  "Description": "Google Analytics Provider for all platforms",
-  "Category": "Analytics",
-  "CreatedBy": "gameDNA Ltd",
-  "CreatedByURL": "http://gamednastudio.com",
-  "DocsURL": "http://gamednastudio.com/plugins/docs/GoogleAnalytics_UserGuide.pdf",
-  "MarketplaceURL": "com.epicgames.launcher://ue/marketplace/content/1b3f6c0fc07648b18758f7b883358b3e",
-  "EngineVersion": "4.22.0",
+	"FileVersion": 3,
+	"Version": 1,
+	"VersionName": "2.12.0",
+	"FriendlyName": "Google Analytics Provider",
+	"Description": "Google Analytics Provider for all platforms",
+	"Category": "Analytics",
+	"CreatedBy": "gameDNA Ltd",
+	"CreatedByURL": "http://gamednastudio.com",
+	"DocsURL": "http://gamednastudio.com/plugins/docs/GoogleAnalytics_UserGuide.pdf",
+	"MarketplaceURL": "com.epicgames.launcher://ue/marketplace/content/1b3f6c0fc07648b18758f7b883358b3e",
 	"SupportURL": "mailto:support@gamednastudio.com",
-	"EnabledByDefault": true,
+	"EngineVersion": "4.23.0",
 	"CanContainContent": false,
 	"Installed": true,
 	"RequiresBuildPlatform": true,
-  "Modules": [
-    {
-      "Name": "GoogleAnalytics",
-      "Type": "Runtime",
-	  "LoadingPhase": "Default",
-	  "WhitelistPlatforms": [
-        "Win64",
-        "Win32",
-        "Linux",
-        "Mac",
-        "IOS",
-		"TVOS",
-		"Android",
-		"HTML5",
-		"PS4",
-		"XboxOne",
-		"Switch",
-		"Lumin",
-		"Quail"
-      ]
-    }
-  ],
-	"Plugins": [
+	"Modules": [
 		{
-			"Name": "AnalyticsBlueprintLibrary",
-			"Enabled": true
+			"Name": "GoogleAnalytics",
+			"Type": "Runtime",
+			"LoadingPhase": "Default",
+			"WhitelistPlatforms": [
+				"Win64",
+				"Win32",
+				"Linux",
+				"Mac",
+				"IOS",
+				"TVOS",
+				"Android",
+				"HTML5",
+				"PS4",
+				"XboxOne",
+				"Switch",
+				"Lumin",
+				"Quail"
+			]
 		}
 	]
 }
