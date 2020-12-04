@@ -10,7 +10,7 @@
 	"DocsURL": "http://gamednastudio.com/plugins/docs/GoogleAnalytics_UserGuide.pdf",
 	"MarketplaceURL": "com.epicgames.launcher://ue/marketplace/content/1b3f6c0fc07648b18758f7b883358b3e",
 	"SupportURL": "mailto:support@gamednastudio.com",
-	"EngineVersion": "4.25.0",
+	"EngineVersion": "4.26.0",
 	"CanContainContent": false,
 	"Installed": true,
 	"RequiresBuildPlatform": true,
