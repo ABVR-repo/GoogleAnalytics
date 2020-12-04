@@ -523,7 +523,7 @@ void FAnalyticsProviderGoogleAnalytics::MakeOnlineRequest(const FString& Type, c
 	FString RequestUrl = "https://www.google-analytics.com/collect?v=1&t=" + Type + "&tid=" + ApiTrackingId + "&cid=" + UniversalCid + "&geoid=" + FPlatformHttp::UrlEncode(Location) + "&ds=UE4&uid=" + UserId + BuildCustomDimensions(CustomDimensions) + BuildCustomMetrics(CustomMetrics) + SystemInfo + Parameters;
 
 	// Send Request
-	TSharedRef<IHttpRequest> HttpRequest = FHttpModule::Get().CreateRequest();
+	auto HttpRequest = FHttpModule::Get().CreateRequest();
 	HttpRequest->SetURL(RequestUrl);
 	HttpRequest->SetVerb("GET");
 	HttpRequest->ProcessRequest();
